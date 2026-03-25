@@ -47,3 +47,4 @@ Role-based route protection
 Runs every 2 minutes
 Auto-scans all products for HIGH/CRITICAL stock levels
 Auto-creates POs and emails vendors if no open PO exists
+
