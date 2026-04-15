@@ -132,6 +132,28 @@ router.post('/admin-reset-password', authenticate, async (req, res) => {
     }
 });
 
+// POST /auth/reset-direct — user resets own password using their email (no token needed)
+router.post('/reset-direct', async (req, res) => {
+    try {
+        const { email, newPassword } = req.body;
+        if (!email || !newPassword) {
+            return res.status(400).json({ error: 'Email and new password are required' });
+        }
+        const user = await User.findOne({ where: { email: email.toLowerCase().trim() } });
+        if (!user) {
+            return res.status(404).json({ error: 'No account found with this email address' });
+        }
+        if (!PW_REGEX.test(newPassword)) {
+            return res.status(400).json({ error: 'Password must be 8+ chars with uppercase, lowercase, number and @#_' });
+        }
+        await user.update({ password: await bcrypt.hash(newPassword, 10) });
+        return res.json({ success: true, message: 'Password updated successfully' });
+    } catch (err) {
+        return res.status(500).json({ error: 'Reset failed: ' + err.message });
+    }
+});
+
+
 // DELETE /auth/users/:id — Admin deletes a user
 router.delete('/users/:id', authenticate, async (req, res) => {
     try {

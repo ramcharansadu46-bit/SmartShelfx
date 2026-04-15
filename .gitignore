@@ -9,6 +9,10 @@ backend/node_modules/
 dist/
 build/
 
+# Angular cache (prevents tsbuildinfo path-mismatch errors across platforms)
+.angular/cache/
+frontend/.angular/cache/
+
 # Environment files
 .env
 frontend/.env
