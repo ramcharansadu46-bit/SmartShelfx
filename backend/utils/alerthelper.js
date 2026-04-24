@@ -106,4 +106,4 @@ const checkAndCreatePO = async (product) => {
     }
 };
 
-module.exports = { createStockAlert, createAutoPO, checkAndCreatePO };
+module.exports = { createStockAlert, createAutoPO, checkAndCreatePO }; 
