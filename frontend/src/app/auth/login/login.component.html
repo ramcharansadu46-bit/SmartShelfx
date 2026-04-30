@@ -31,7 +31,7 @@
             <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
                 <div class="form-group">
                     <div class="input-wrap">
-                        <span class="input-icon">&#9993;</span>
+                        <span class="input-icon">✉️</span>
                         <input type="email" formControlName="email" placeholder="Email Address*" class="has-icon"
                             autocomplete="email">
                     </div>
@@ -58,6 +58,10 @@
                 </button>
             </form>
             <p class="footer-link">New to the platform? <a routerLink="/auth/register">Create an account</a></p>
+            <div class="admin-link-row">
+                <span class="admin-divider">─────── or ───────</span>
+                <a routerLink="/auth/admin" class="admin-link">🛡️ Login as Admin</a>
+            </div>
         </div>
     </div>
 </div>
