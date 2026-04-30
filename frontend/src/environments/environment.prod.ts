@@ -1,5 +1,5 @@
 export const environment = {
     production: true,
-    apiUrl: '/api',
-    mlUrl: 'http://localhost:8000'
+    apiUrl: 'https://smartshelfx-production.up.railway.app/api',
+    mlUrl: 'https://optimistic-emotion-production-04d7.up.railway.app'
 };
