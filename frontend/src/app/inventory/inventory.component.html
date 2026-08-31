@@ -35,6 +35,7 @@
                     (change)="onFileImport($event)" [disabled]="importing">
             </label>
             <button class="btn btn-primary" (click)="openAdd()">＋ Add Product</button>
+            <button class="btn btn-danger" (click)="clearAllData()" *ngIf="total > 0" title="Delete all products from the database">🗑 Clear All Data</button>
         </div>
     </div>
     <div class="import-error-panel" *ngIf="importError">

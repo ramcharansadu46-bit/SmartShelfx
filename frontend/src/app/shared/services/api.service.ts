@@ -114,4 +114,7 @@ export class ApiService {
     getUsers(): Observable<any[]> {
         return this.http.get<any[]>(`${this.API}/auth/users`);
     }
+    clearAllProducts(): Observable<{ success: boolean; deleted: number }> {
+        return this.http.delete<{ success: boolean; deleted: number }>(`${this.API}/products/clear-all`);
+    }
 }

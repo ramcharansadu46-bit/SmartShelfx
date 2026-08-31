@@ -134,12 +134,18 @@ export class InventoryComponent implements OnInit {
             return;
         }
         this.importing = true;
+        this.importError = '';
         this.api.importProductsSheet(file).subscribe({
             next: res => {
                 this.importing = false;
-                this.importError = '';
-                this.notify.success(`✅ Imported ${res.imported} products${res.skipped ? '. Skipped: ' + res.skipped : ''}`);
-                this.loadProducts();
+                if (res.imported === 0) {
+                    this.importError = `No new products were imported. All ${res.skipped} row(s) already exist in the database (duplicate SKUs).`;
+                    this.notify.error('Import skipped — all products already exist');
+                } else {
+                    this.importError = '';
+                    this.notify.success(`Imported ${res.imported} product(s)${res.skipped ? '. Skipped ' + res.skipped + ' duplicate(s)' : ''}`);
+                    this.loadProducts();
+                }
                 input.value = '';
             },
             error: err => {
@@ -151,18 +157,13 @@ export class InventoryComponent implements OnInit {
                 } else {
                     this.importError = body?.error || body?.message || 'Import failed. Check file format.';
                 }
-                this.notify.error('Import failed — see details below');
+                this.notify.error(this.importError);
             }
         });
     }
     downloadTemplate() {
         const header = 'name,sku,category,current_stock,reorder_level,unit_price,expiry_date';
-        const rows = [
-            'Laptop Stand Pro,SKU-NEW1,Electronics,50,15,29.99,',
-            'Ergonomic Chair,SKU-NEW2,Furniture,20,5,299.00,',
-            'A4 Paper 500pk,SKU-NEW3,Supplies,100,30,12.99,2026-12-31'
-        ];
-        const content = [header, ...rows].join('\n');
+        const content = header + '\n';
         const blob = new Blob([content], { type: 'text/csv' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -170,6 +171,16 @@ export class InventoryComponent implements OnInit {
         a.download = 'smartshelfx_products_template.csv';
         a.click();
         URL.revokeObjectURL(url);
+    }
+    clearAllData() {
+        if (!confirm('This will permanently delete ALL products and related data. Are you sure?')) return;
+        this.api.clearAllProducts().subscribe({
+            next: res => {
+                this.notify.success(`Cleared ${res.deleted} product(s) from the database`);
+                this.loadProducts();
+            },
+            error: err => this.notify.error(err.error?.error || 'Failed to clear data')
+        });
     }
     onSearch() { this.page = 1; this.loadProducts(); }
     prevPage() { if (this.page > 1) { this.page--; this.loadProducts(); } }

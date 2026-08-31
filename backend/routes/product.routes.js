@@ -291,10 +291,19 @@ router.post('/import-sheet', requireRole('ADMIN', 'MANAGER'), upload.single('fil
                 hint: `Your file has ${rawRows.length} rows but none matched required columns. Detected columns: [${detectedHeaders.join(', ')}]. Need columns for: product name, SKU/code, and category.`
             });
         }
-        const imported = await Product.bulkCreate(validRows, {
-            ignoreDuplicates: true,
-            validate: true
-        });
+        const skus = validRows.map(r => r.sku);
+        const existing = await Product.findAll({ where: { sku: skus }, attributes: ['sku'] });
+        const existingSkus = new Set(existing.map(p => p.sku));
+        const newRows = validRows.filter(r => !existingSkus.has(r.sku));
+        if (newRows.length === 0) {
+            fs.existsSync(filePath) && fs.unlinkSync(filePath);
+            return res.status(409).json({
+                error: `All ${validRows.length} product(s) in your file already exist in the database (duplicate SKUs). No new products were imported.`,
+                skipped: validRows.length,
+                imported: 0
+            });
+        }
+        const imported = await Product.bulkCreate(newRows, { validate: true });
         fs.existsSync(filePath) && fs.unlinkSync(filePath);
         res.json({
             success: true,
@@ -330,6 +339,18 @@ router.post('/import-csv', requireRole('ADMIN', 'MANAGER'), upload.single('file'
     } catch (err) {
         fs.existsSync(filePath) && fs.unlinkSync(filePath);
         res.status(500).json({ error: 'Import failed: ' + err.message });
+    }
+});
+router.delete('/clear-all', requireRole('ADMIN'), async (req, res) => {
+    try {
+        await StockTransaction.destroy({ where: {} });
+        await ForecastResult.destroy({ where: {} });
+        await Alert.destroy({ where: {} });
+        await PurchaseOrder.destroy({ where: {} });
+        const deleted = await Product.destroy({ where: {} });
+        res.json({ success: true, deleted });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
 });
 module.exports = router;
