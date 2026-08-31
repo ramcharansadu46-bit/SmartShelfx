@@ -60,8 +60,8 @@ const startDB = async () => {
     try {
         await sequelize.authenticate();
         console.log('✅ Database connected.');
-        await sequelize.sync({ alter: false });
-        console.log('✅ Models synced.');
+        await sequelize.sync({ alter: true });
+        console.log('✅ Models synced with schema.');
         dbReady = true;
     } catch (err) {
         dbError = err.message;

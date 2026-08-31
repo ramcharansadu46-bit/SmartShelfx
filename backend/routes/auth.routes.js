@@ -19,7 +19,29 @@ router.post('/register', async (req, res) => {
         if (await User.findOne({ where: { email: email.toLowerCase().trim() } })) return res.status(409).json({ error: 'Email is already registered' });
         if (username && username.trim() && await User.findOne({ where: { username: username.trim() } })) return res.status(409).json({ error: 'Username is already taken' });
         const assignedRole = ['ADMIN', 'MANAGER', 'VENDOR'].includes(role) ? role : 'MANAGER';
-        const user = await User.create({ name: name.trim(), username: (username && username.trim()) || null, email: email.toLowerCase().trim(), personal_email: personal_email ? personal_email.toLowerCase().trim() : null, password: await bcrypt.hash(password, 10), role: assignedRole });
+        let user;
+        try {
+            user = await User.create({
+                name: name.trim(),
+                username: (username && username.trim()) || null,
+                email: email.toLowerCase().trim(),
+                personal_email: personal_email ? personal_email.toLowerCase().trim() : null,
+                password: await bcrypt.hash(password, 10),
+                role: assignedRole
+            });
+        } catch (createErr) {
+            if (createErr.message?.includes('personal_email')) {
+                user = await User.create({
+                    name: name.trim(),
+                    username: (username && username.trim()) || null,
+                    email: email.toLowerCase().trim(),
+                    password: await bcrypt.hash(password, 10),
+                    role: assignedRole
+                });
+            } else {
+                throw createErr;
+            }
+        }
         return res.status(201).json({ success: true, userId: user.id });
     } catch (err) {
         if (err.name === 'SequelizeUniqueConstraintError') return res.status(409).json({ error: (err.errors?.[0]?.path || 'field') + ' is already in use' });
