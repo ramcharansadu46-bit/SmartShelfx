@@ -35,12 +35,6 @@ export class LoginComponent {
         this.loading = true;
         this.auth.login(this.form.value).subscribe({
             next: (res) => {
-                if (res.role === 'ADMIN') {
-                    this.auth.logout();
-                    this.loading = false;
-                    this.errorMsg = 'You are an Admin. You cannot login here. You have a separate login link at port 4201.';
-                    return;
-                }
                 this.notify.success(`Welcome, ${res.name}!`);
                 this.redirectByRole(res.role);
             },
