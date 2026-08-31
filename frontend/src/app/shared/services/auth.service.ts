@@ -1,7 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap, catchError, of } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthResponse, LoginPayload, RegisterPayload, User } from '../models/interfaces';
 
@@ -16,45 +16,28 @@ export class AuthService {
         this.loadFromStorage();
     }
 
-    /** Returns the correct login route based on which port the app is running on */
     getLoginRoute(): string {
         const port = window?.location?.port ?? '';
         return port === '4201' ? '/auth/admin' : '/auth/login';
     }
 
     login(payload: LoginPayload): Observable<AuthResponse> {
-        const isAdminPortal = window?.location?.href?.includes('/auth/admin') || payload.email?.toLowerCase().includes('admin');
-        const defaultRole = isAdminPortal ? 'ADMIN' : 'MANAGER';
-        const defaultName = isAdminPortal ? 'Administrator' : 'Demo Manager';
-
         return this.http.post<AuthResponse>(`${this.API}/auth/login`, payload).pipe(
-            tap(res => this.setSession(res, payload.email)),
-            catchError(() => {
-                const demoRes: AuthResponse = {
-                    token: 'demo_token_ssx_2026',
-                    role: defaultRole,
-                    name: defaultName,
-                    userId: isAdminPortal ? 1 : 99
-                };
-                this.setSession(demoRes, payload.email || (isAdminPortal ? 'admin@smartshelfx.com' : 'demo@smartshelfx.com'));
-                return of(demoRes);
+            tap(res => {
+                localStorage.setItem('ssxToken', res.token);
+                localStorage.setItem('ssxRole', res.role);
+                localStorage.setItem('ssxName', res.name);
+                localStorage.setItem('ssxUserId', String(res.userId));
+                this.isLoggedIn.set(true);
+                this.currentUser.set({
+                    id: res.userId,
+                    name: res.name,
+                    username: '',
+                    email: payload.email,
+                    role: res.role as any
+                });
             })
         );
-    }
-
-    private setSession(res: AuthResponse, email: string): void {
-        localStorage.setItem('ssxToken', res.token);
-        localStorage.setItem('ssxRole', res.role);
-        localStorage.setItem('ssxName', res.name);
-        localStorage.setItem('ssxUserId', String(res.userId));
-        this.isLoggedIn.set(true);
-        this.currentUser.set({
-            id: res.userId,
-            name: res.name,
-            username: 'demouser',
-            email: email,
-            role: res.role as any
-        });
     }
 
     register(payload: RegisterPayload): Observable<{ success: boolean; userId: number }> {
@@ -68,7 +51,6 @@ export class AuthService {
         localStorage.removeItem('ssxUserId');
         this.currentUser.set(null);
         this.isLoggedIn.set(false);
-        // ✅ Port-aware redirect: admin port 4201 → admin login, others → regular login
         this.router.navigate([this.getLoginRoute()]);
     }
 
@@ -100,7 +82,9 @@ export class AuthService {
             if (!token) return null;
             const payload = JSON.parse(atob(token.split('.')[1]));
             return payload.id || payload.userId || null;
-        } catch { return null; }
+        } catch {
+            return null;
+        }
     }
 
     getMe(): Observable<User> {
