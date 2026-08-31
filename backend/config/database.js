@@ -1,14 +1,18 @@
 const { Sequelize } = require('sequelize');
+const path = require('path');
+const fs = require('fs');
+
 const dbUrl = process.env.MYSQL_URL || process.env.DATABASE_URL;
 let sequelize;
-const dialectOptions = {};
-if (process.env.DB_SSL === 'true' || (process.env.NODE_ENV === 'production' && process.env.DB_SSL !== 'false')) {
-    dialectOptions.ssl = {
-        require: true,
-        rejectUnauthorized: false
-    };
-}
+
 if (dbUrl) {
+    const dialectOptions = {};
+    if (process.env.DB_SSL === 'true' || (process.env.NODE_ENV === 'production' && process.env.DB_SSL !== 'false')) {
+        dialectOptions.ssl = {
+            require: true,
+            rejectUnauthorized: false
+        };
+    }
     sequelize = new Sequelize(dbUrl, {
         dialect: 'mysql',
         logging: false,
@@ -24,13 +28,20 @@ if (dbUrl) {
             collate: 'utf8mb4_unicode_ci'
         }
     });
-} else {
+} else if (process.env.DB_HOST && process.env.DB_HOST !== 'localhost') {
+    const dialectOptions = {};
+    if (process.env.DB_SSL === 'true' || (process.env.NODE_ENV === 'production' && process.env.DB_SSL !== 'false')) {
+        dialectOptions.ssl = {
+            require: true,
+            rejectUnauthorized: false
+        };
+    }
     sequelize = new Sequelize(
         process.env.DB_NAME || 'smartshelfx',
         process.env.DB_USER || 'root',
         process.env.DB_PASS || '',
         {
-            host: process.env.DB_HOST || 'localhost',
+            host: process.env.DB_HOST,
             port: Number(process.env.DB_PORT) || 3306,
             dialect: 'mysql',
             logging: false,
@@ -47,5 +58,15 @@ if (dbUrl) {
             }
         }
     );
+} else {
+    const dataDir = path.join(__dirname, '../data');
+    if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+    const storagePath = path.join(dataDir, 'smartshelfx.sqlite');
+    sequelize = new Sequelize({
+        dialect: 'sqlite',
+        storage: storagePath,
+        logging: false
+    });
 }
+
 module.exports = { sequelize };
