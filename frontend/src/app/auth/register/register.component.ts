@@ -41,7 +41,7 @@ export class RegisterComponent {
             name: ['', [Validators.required, Validators.minLength(2)]],
             username: ['', Validators.required],
             email: ['', [Validators.required, Validators.email]],
-            personal_email: ['', [Validators.required, Validators.email]],
+            personal_email: [''],
             role: ['', Validators.required],
             password: ['', [Validators.required, passwordStrengthValidator]],
             confirmPassword: ['', Validators.required]
@@ -56,9 +56,9 @@ export class RegisterComponent {
         this.loading = true;
         const payload = {
             name: this.form.value.name.trim(),
-            username: this.form.value.username.trim(),
+            username: this.form.value.username ? this.form.value.username.trim() : undefined,
             email: this.form.value.email.trim().toLowerCase(),
-            personal_email: this.form.value.personal_email.trim().toLowerCase(),
+            personal_email: this.form.value.personal_email?.trim() ? this.form.value.personal_email.trim().toLowerCase() : undefined,
             role: this.form.value.role,
             password: this.form.value.password
         };
