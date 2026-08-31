@@ -30,7 +30,7 @@ router.post('/register', async (req, res) => {
                 role: assignedRole
             });
         } catch (createErr) {
-            if (createErr.message?.includes('personal_email')) {
+            if (createErr.message && createErr.message.includes('personal_email')) {
                 user = await User.create({
                     name: name.trim(),
                     username: (username && username.trim()) || null,
@@ -46,7 +46,8 @@ router.post('/register', async (req, res) => {
     } catch (err) {
         if (err.name === 'SequelizeUniqueConstraintError') return res.status(409).json({ error: (err.errors?.[0]?.path || 'field') + ' is already in use' });
         if (err.name === 'SequelizeValidationError') return res.status(400).json({ error: err.errors?.[0]?.message || 'Validation error' });
-        return res.status(500).json({ error: 'Registration failed: ' + err.message });
+        const detailedErr = err.original?.sqlMessage || err.message || 'Database connection error';
+        return res.status(500).json({ error: 'Registration failed: ' + detailedErr });
     }
 });
 router.post('/login', async (req, res) => {
@@ -56,9 +57,12 @@ router.post('/login', async (req, res) => {
         const user = await User.findOne({ where: { email: email.toLowerCase().trim() } });
         if (!user) return res.status(401).json({ error: 'No account found with this email' });
         if (!await bcrypt.compare(password, user.password)) return res.status(401).json({ error: 'Incorrect password' });
-        const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '24h' });
+        const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET || 'smartshelfx_jwt_secret_key_2024_change_in_production', { expiresIn: process.env.JWT_EXPIRES_IN || '24h' });
         return res.json({ token, userId: user.id, name: user.name, role: user.role, email: user.email });
-    } catch (err) { return res.status(500).json({ error: 'Login failed: ' + err.message }); }
+    } catch (err) {
+        const detailedErr = err.original?.sqlMessage || err.message || 'Database connection error';
+        return res.status(500).json({ error: 'Login failed: ' + detailedErr });
+    }
 });
 router.post('/forgot-password', async (req, res) => {
     try {
