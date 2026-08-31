@@ -4,7 +4,6 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../shared/services/auth.service';
 import { NotificationService } from '../../shared/services/notification.service';
-
 @Component({
     selector: 'app-login',
     standalone: true,
@@ -17,7 +16,6 @@ export class LoginComponent {
     loading = false;
     showPass = false;
     errorMsg = '';
-
     constructor(
         private fb: FormBuilder,
         private auth: AuthService,
@@ -29,15 +27,12 @@ export class LoginComponent {
             password: ['', [Validators.required, Validators.minLength(4)]]
         });
     }
-
     get email() { return this.form.get('email')!; }
     get password() { return this.form.get('password')!; }
-
     submit() {
         this.errorMsg = '';
         if (this.form.invalid) { this.form.markAllAsTouched(); return; }
         this.loading = true;
-
         this.auth.login(this.form.value).subscribe({
             next: (res) => {
                 if (res.role === 'ADMIN') {
@@ -57,7 +52,6 @@ export class LoginComponent {
             }
         });
     }
-
     private redirectByRole(role: string): void {
         switch (role) {
             case 'ADMIN': this.router.navigate(['/dashboard']); break;

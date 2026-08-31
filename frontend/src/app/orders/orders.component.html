@@ -1,24 +1,13 @@
 <div class="orders animate-fade">
-
     <div class="page-title">Purchase <span>Orders</span></div>
-
-    <!-- ════════════════════════════════════════════════════════════════
-       VENDOR VIEW
-  ════════════════════════════════════════════════════════════════ -->
     <ng-container *ngIf="isVendor">
-
-        <!-- Pending Approvals Section -->
         <div class="section-header">
             <span class="section-icon">🕐</span>
             <span>Pending Approvals</span>
             <span class="badge-count" *ngIf="pendingPOs.length > 0">{{ pendingPOs.length }}</span>
         </div>
-
         <div class="loading-row" *ngIf="loadingPending">⟳ Loading pending orders...</div>
-
         <div class="approval-grid" *ngIf="!loadingPending">
-
-            <!-- Approval Card -->
             <div class="approval-card" *ngFor="let o of pendingPOs">
                 <div class="approval-card-header">
                     <span class="po-badge">PO-{{ o.id }}</span>
@@ -55,19 +44,13 @@
                     </button>
                 </div>
             </div>
-
-            <!-- Empty state -->
             <div class="approval-empty" *ngIf="pendingPOs.length === 0">
                 <div class="empty-icon">✅</div>
                 <div class="empty-title">All caught up!</div>
                 <div class="empty-sub">No pending approvals at the moment.</div>
             </div>
         </div>
-
-        <!-- Divider -->
         <div class="section-divider"></div>
-
-        <!-- All My Orders Table -->
         <div class="section-header">
             <span class="section-icon">📋</span>
             <span>All My Orders</span>
@@ -81,7 +64,6 @@
                 <option value="CANCELLED">Cancelled</option>
             </select>
         </div>
-
         <div class="table-card">
             <div class="loading-row" *ngIf="loading">⟳ Loading orders...</div>
             <div style="overflow-x:auto" *ngIf="!loading">
@@ -124,16 +106,8 @@
                 </table>
             </div>
         </div>
-
     </ng-container>
-
-
-    <!-- ════════════════════════════════════════════════════════════════
-       ADMIN / MANAGER VIEW
-  ════════════════════════════════════════════════════════════════ -->
     <ng-container *ngIf="!isVendor">
-
-        <!-- Create Form Panel -->
         <div class="form-panel" *ngIf="showCreate">
             <div class="form-panel-header">
                 <h3>🛒 Create Purchase Order</h3>
@@ -172,8 +146,6 @@
                 </div>
             </form>
         </div>
-
-        <!-- AI Suggestions -->
         <div class="suggestions-card" style="margin-bottom:20px">
             <div class="card-title">
                 🤖 AI-Suggested Restock
@@ -229,7 +201,6 @@
                 </table>
             </div>
         </div>
-
         <div class="table-card">
             <div class="table-card-header">
                 <span>All Purchase Orders</span>
@@ -244,7 +215,6 @@
                 </select>
             </div>
             <div class="loading-row" *ngIf="loading">⟳ Loading orders...</div>
-
             <div style="overflow-x:auto" *ngIf="!loading">
                 <table>
                     <colgroup>
@@ -305,7 +275,5 @@
                 </table>
             </div>
         </div>
-
     </ng-container>
-
 </div>

@@ -4,9 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Chart, registerables } from 'chart.js';
 import { ApiService } from '../shared/services/api.service';
 import { AnalyticsSummary, TopRestockedItem, CategoryBreakdown } from '../shared/models/interfaces';
-
 Chart.register(...registerables);
-
 @Component({
     selector: 'app-analytics',
     standalone: true,
@@ -15,11 +13,9 @@ Chart.register(...registerables);
     styleUrls: ['./analytics.component.scss']
 })
 export class AnalyticsComponent implements OnInit, AfterViewInit, OnDestroy {
-
     @ViewChild('stockTrendCanvas') stockTrendCanvas!: ElementRef<HTMLCanvasElement>;
     @ViewChild('categoryCanvas') categoryCanvas!: ElementRef<HTMLCanvasElement>;
     @ViewChild('poStatusCanvas') poStatusCanvas!: ElementRef<HTMLCanvasElement>;
-
     summary: AnalyticsSummary = { totalProducts: 0, lowStockItems: 0, outOfStockItems: 0, pendingOrders: 0 };
     topItems: TopRestockedItem[] = [];
     categories: CategoryBreakdown[] = [];
@@ -27,54 +23,40 @@ export class AnalyticsComponent implements OnInit, AfterViewInit, OnDestroy {
     loading = true;
     movementLoading = false;
     movementPeriod: 'day' | 'month' | 'year' = 'month';
-
-    // Template aliases
     get selectedPeriod() { return this.movementPeriod; }
     set selectedPeriod(v: 'day' | 'month' | 'year') { this.movementPeriod = v; }
     get loadingChart() { return this.movementLoading; }
-
     poStatusData = { pending: 0, approved: 0, dispatched: 0, delivered: 0, cancelled: 0 };
-
     trendLabels: string[] = [];
     trendIn: number[] = [];
     trendOut: number[] = [];
-
     private trendChart?: Chart;
     private categoryChart?: Chart;
     private poChart?: Chart;
     private chartsReady = false;
-
     constructor(private api: ApiService, private cdr: ChangeDetectorRef) { }
-
     ngOnInit() { this.loadAll(); }
     ngAfterViewInit() { this.chartsReady = true; this.tryBuildCharts(); }
     ngOnDestroy() { this.trendChart?.destroy(); this.categoryChart?.destroy(); this.poChart?.destroy(); }
-
     loadAll() {
         this.loading = true;
-
         this.api.getAnalyticsSummary().subscribe({
             next: s => { this.summary = s; this.cdr.detectChanges(); },
             error: () => { }
         });
-
         this.loadMovement();
-
         this.api.getTopRestocked().subscribe({
             next: items => { this.topItems = items; this.cdr.detectChanges(); },
             error: () => { this.topItems = []; }
         });
-
         this.api.getCategoryBreakdown().subscribe({
             next: cats => { this.categories = cats; this.tryBuildCharts(); },
             error: () => { }
         });
-
         this.api.getProducts({ status: 'low', limit: 10 }).subscribe({
             next: res => { this.lowStockProducts = res.data; this.loading = false; this.cdr.detectChanges(); },
             error: () => { this.loading = false; }
         });
-
         this.api.getOrders({ limit: 200 }).subscribe({
             next: res => {
                 const orders = res.data || [];
@@ -90,7 +72,6 @@ export class AnalyticsComponent implements OnInit, AfterViewInit, OnDestroy {
             error: () => { }
         });
     }
-
     loadMovement() {
         this.movementLoading = true;
         this.api.getStockMovement(this.movementPeriod).subscribe({
@@ -104,9 +85,7 @@ export class AnalyticsComponent implements OnInit, AfterViewInit, OnDestroy {
             error: () => { this.movementLoading = false; }
         });
     }
-
     onPeriodChange() { this.loadMovement(); }
-
     tryBuildCharts() {
         if (!this.chartsReady) return;
         setTimeout(() => {
@@ -115,7 +94,6 @@ export class AnalyticsComponent implements OnInit, AfterViewInit, OnDestroy {
             this.buildPOChart();
         }, 100);
     }
-
     buildTrendChart() {
         if (!this.stockTrendCanvas?.nativeElement) return;
         this.trendChart?.destroy();
@@ -151,7 +129,6 @@ export class AnalyticsComponent implements OnInit, AfterViewInit, OnDestroy {
             }
         });
     }
-
     buildCategoryChart() {
         if (!this.categoryCanvas?.nativeElement || !this.categories.length) return;
         this.categoryChart?.destroy();
@@ -174,7 +151,6 @@ export class AnalyticsComponent implements OnInit, AfterViewInit, OnDestroy {
             }
         });
     }
-
     buildPOChart() {
         if (!this.poStatusCanvas?.nativeElement) return;
         this.poChart?.destroy();
@@ -201,26 +177,22 @@ export class AnalyticsComponent implements OnInit, AfterViewInit, OnDestroy {
             }
         });
     }
-
     getBarWidth(val: number): string {
         const max = Math.max(...this.topItems.map(i => i.total_restocked), 1);
         return `${Math.round((val / max) * 100)}%`;
     }
-
     statusClass(p: any): string {
         if (p.current_stock === 0) return 'badge-out';
         if (p.current_stock <= p.reorder_level * 0.5) return 'badge-crit';
         if (p.current_stock <= p.reorder_level) return 'badge-low';
         return 'badge-ok';
     }
-
     statusLabel(p: any): string {
         if (p.current_stock === 0) return 'Out of Stock';
         if (p.current_stock <= p.reorder_level * 0.5) return 'Critical';
         if (p.current_stock <= p.reorder_level) return 'Low Stock';
         return 'In Stock';
     }
-
     get totalStock(): number {
         return this.categories.reduce((s, c) => s + Number(c.total_stock), 0);
     }

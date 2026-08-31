@@ -4,19 +4,16 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractContro
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../shared/services/auth.service';
 import { NotificationService } from '../../shared/services/notification.service';
-
 function passwordStrengthValidator(control: AbstractControl): ValidationErrors | null {
     const v = control.value || '';
     const ok = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@#_]).{8,}$/.test(v);
     return ok ? null : { passwordStrength: true };
 }
-
 function confirmPasswordValidator(group: AbstractControl): ValidationErrors | null {
     const pw = group.get('password')?.value;
     const cpw = group.get('confirmPassword')?.value;
     return pw && cpw && pw !== cpw ? { passwordMismatch: true } : null;
 }
-
 @Component({
     selector: 'app-register',
     standalone: true,
@@ -32,7 +29,6 @@ export class RegisterComponent {
     showPwTooltip = false;
     showCpTooltip = false;
     errorMsg = '';
-
     pwRules = [
         { label: 'Minimum 8 characters', regex: /.{8,}/ },
         { label: 'At least one uppercase (A-Z)', regex: /[A-Z]/ },
@@ -40,7 +36,6 @@ export class RegisterComponent {
         { label: 'At least one number (0-9)', regex: /[0-9]/ },
         { label: 'At least one special (@, #, _)', regex: /[@#_]/ }
     ];
-
     constructor(private fb: FormBuilder, private auth: AuthService, private router: Router, private notify: NotificationService) {
         this.form = this.fb.group({
             name: ['', [Validators.required, Validators.minLength(2)]],
@@ -52,12 +47,9 @@ export class RegisterComponent {
             confirmPassword: ['', Validators.required]
         }, { validators: confirmPasswordValidator });
     }
-
     get f() { return this.form.controls; }
     get pwVal() { return this.f['password'].value || ''; }
-
     rulePass(regex: RegExp): boolean { return regex.test(this.pwVal); }
-
     submit() {
         this.errorMsg = '';
         if (this.form.invalid) { this.form.markAllAsTouched(); return; }

@@ -1,10 +1,8 @@
 import { Injectable } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
-
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
     constructor(private snack: MatSnackBar) { }
-
     success(msg: string, duration = 3000): void {
         this.snack.open('✅  ' + msg, 'Dismiss', {
             duration,
@@ -13,7 +11,6 @@ export class NotificationService {
             verticalPosition: 'top'
         });
     }
-
     error(msg: string, duration = 4000): void {
         this.snack.open('❌  ' + msg, 'Dismiss', {
             duration,
@@ -22,7 +19,6 @@ export class NotificationService {
             verticalPosition: 'top'
         });
     }
-
     info(msg: string, duration = 3000): void {
         this.snack.open('ℹ️  ' + msg, 'OK', {
             duration,
@@ -30,7 +26,6 @@ export class NotificationService {
             verticalPosition: 'top'
         });
     }
-
     warn(msg: string, duration = 3500): void {
         this.snack.open('⚠️  ' + msg, 'OK', {
             duration,

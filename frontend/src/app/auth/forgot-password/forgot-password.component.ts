@@ -4,18 +4,15 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractContro
 import { RouterModule, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-
 function passwordStrengthValidator(c: AbstractControl): ValidationErrors | null {
     return /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@#_]).{8,}$/.test(c.value || '')
         ? null : { passwordStrength: true };
 }
-
 function confirmPasswordValidator(g: AbstractControl): ValidationErrors | null {
     const pw = g.get('newPassword')?.value;
     const cp = g.get('confirmPassword')?.value;
     return pw && cp && pw !== cp ? { passwordMismatch: true } : null;
 }
-
 @Component({
     selector: 'app-forgot-password',
     standalone: true,
@@ -30,7 +27,6 @@ export class ForgotPasswordComponent {
     errorMsg = '';
     showNew = false;
     showConfirm = false;
-
     pwRules = [
         { label: 'Minimum 8 characters', regex: /.{8,}/ },
         { label: 'At least one uppercase (A-Z)', regex: /[A-Z]/ },
@@ -38,7 +34,6 @@ export class ForgotPasswordComponent {
         { label: 'At least one number (0-9)', regex: /[0-9]/ },
         { label: 'At least one special (@, #, _)', regex: /[@#_]/ }
     ];
-
     constructor(private fb: FormBuilder, private http: HttpClient, private router: Router) {
         this.form = this.fb.group({
             email: ['', [Validators.required, Validators.email]],
@@ -46,11 +41,9 @@ export class ForgotPasswordComponent {
             confirmPassword: ['', Validators.required]
         }, { validators: confirmPasswordValidator });
     }
-
     get f() { return this.form.controls; }
     get pwVal() { return this.f['newPassword'].value || ''; }
     rulePass(r: RegExp) { return r.test(this.pwVal); }
-
     submit() {
         this.errorMsg = '';
         if (this.form.invalid) { this.form.markAllAsTouched(); return; }
@@ -66,6 +59,5 @@ export class ForgotPasswordComponent {
             }
         });
     }
-
     goLogin() { this.router.navigate(['/auth/login']); }
 }

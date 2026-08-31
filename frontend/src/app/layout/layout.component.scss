@@ -2,7 +2,6 @@
     display: flex;
     min-height: 100vh;
 }
-
 .layout-main {
     flex: 1;
     margin-left: var(--sidebar-width);
@@ -11,13 +10,11 @@
     min-height: 100vh;
     transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
 .layout-content {
     flex: 1;
     padding: 24px;
     overflow-y: auto;
 }
-
 .layout-shell.sidebar-collapsed .layout-main {
     margin-left: 68px;
 }

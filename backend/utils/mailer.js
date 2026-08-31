@@ -1,5 +1,4 @@
 const nodemailer = require('nodemailer');
-
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
   port: Number(process.env.SMTP_PORT) || 587,
@@ -9,8 +8,6 @@ const transporter = nodemailer.createTransport({
     pass: process.env.SMTP_PASS
   }
 });
-
-/* ── Sent to VENDOR when a new PO is raised ────────────────────── */
 const sendPurchaseOrderEmail = async ({ vendorEmail, vendorName, productName, productSku, quantity, orderId, notes }) => {
   await transporter.sendMail({
     from: process.env.SMTP_FROM || 'SmartShelfX <noreply@smartshelfx.com>',
@@ -57,14 +54,11 @@ const sendPurchaseOrderEmail = async ({ vendorEmail, vendorName, productName, pr
       </div>`
   });
 };
-
-/* ── Sent to MANAGER when vendor approves or rejects ───────────── */
 const sendManagerNotificationEmail = async ({ managerEmail, managerName, vendorName, productName, productSku, quantity, orderId, decision, notes }) => {
   const isApproved = decision === 'APPROVED';
   const color = isApproved ? '#22c55e' : '#ef4444';
   const icon = isApproved ? '✅' : '❌';
   const label = isApproved ? 'APPROVED' : 'REJECTED';
-
   await transporter.sendMail({
     from: process.env.SMTP_FROM || 'SmartShelfX <noreply@smartshelfx.com>',
     to: managerEmail,
@@ -79,8 +73,8 @@ const sendManagerNotificationEmail = async ({ managerEmail, managerName, vendorN
           <h2 style="color:#333;margin-top:0;">${icon} Purchase Order ${label}</h2>
           <p style="color:#555;">Dear <strong>${managerName || 'Manager'}</strong>,</p>
           <p style="color:#555;">
-            Vendor <strong>${vendorName}</strong> has 
-            <strong style="color:${color};">${label.toLowerCase()}</strong> 
+            Vendor <strong>${vendorName}</strong> has
+            <strong style="color:${color};">${label.toLowerCase()}</strong>
             purchase order <strong>PO-${orderId}</strong>.
           </p>
           <table style="width:100%;border-collapse:collapse;margin:20px 0;">
@@ -117,9 +111,6 @@ const sendManagerNotificationEmail = async ({ managerEmail, managerName, vendorN
       </div>`
   });
 };
-
-
-/* ── Sent to USER for password reset link ──────────────────────── */
 const sendForgotPasswordEmail = async ({ toEmail, toName, resetUrl, systemEmail }) => {
   await transporter.sendMail({
     from: process.env.SMTP_FROM || 'SmartShelfX <noreply@smartshelfx.com>',
@@ -147,5 +138,4 @@ const sendForgotPasswordEmail = async ({ toEmail, toName, resetUrl, systemEmail 
       </div>`
   });
 };
-
 module.exports = { sendPurchaseOrderEmail, sendManagerNotificationEmail, sendForgotPasswordEmail };

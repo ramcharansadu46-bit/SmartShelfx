@@ -1,7 +1,6 @@
 <div class="page animate-fade">
     <div class="page-title">👥 <span>Users Management</span></div>
     <p class="subtitle">Manage system users, roles, access permissions and credentials</p>
-
     <div class="toolbar">
         <input class="search-input" type="text" placeholder="🔍 Search by name or email..." [(ngModel)]="search">
         <select class="filter-sel" [(ngModel)]="filterRole">
@@ -13,7 +12,6 @@
         <div class="spacer"></div>
         <span class="count-badge">{{ filtered.length }} users</span>
     </div>
-
     <div class="table-card">
         <div class="loading-row" *ngIf="loading">⟳ Loading users...</div>
         <div style="overflow-x:auto" *ngIf="!loading">
@@ -81,8 +79,6 @@
         </div>
     </div>
 </div>
-
-<!-- Reset Password Modal -->
 <div class="modal-overlay" *ngIf="resetModal" (click)="closeReset()">
     <div class="modal-box" (click)="$event.stopPropagation()">
         <div class="modal-title">🔑 Reset Password</div>

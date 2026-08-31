@@ -1,8 +1,6 @@
 import os, sys, traceback
 from decimal import Decimal
 from datetime import datetime, timedelta
-
-# Test 1: DB connection
 print("TEST 1: Database connection...")
 try:
     import mysql.connector
@@ -14,22 +12,17 @@ try:
     cursor.execute("SELECT COUNT(*) as cnt FROM products")
     r = cursor.fetchone()
     print(f"  ✅ Connected — {r['cnt']} products found")
-    
     cursor.execute("SELECT COUNT(*) as cnt FROM stock_transactions")
     r2 = cursor.fetchone()
     print(f"  ✅ {r2['cnt']} transactions found")
-    
     cursor.execute("SHOW TABLES LIKE 'forecast_results'")
     r3 = cursor.fetchone()
     print(f"  {'✅' if r3 else '❌'} forecast_results table {'exists' if r3 else 'MISSING'}")
-    
     cursor.close()
     conn.close()
 except Exception as e:
     print(f"  ❌ DB ERROR: {e}")
     sys.exit(1)
-
-# Test 2: Pydantic
 print("\nTEST 2: Pydantic model_accuracy conflict...")
 try:
     from pydantic import BaseModel, ConfigDict
@@ -42,8 +35,6 @@ try:
 except Exception as e:
     print(f"  ❌ Pydantic ERROR: {e}")
     traceback.print_exc()
-
-# Test 3: Decimal serialization
 print("\nTEST 3: MySQL Decimal types...")
 try:
     conn = mysql.connector.connect(
@@ -63,8 +54,6 @@ try:
     conn.close()
 except Exception as e:
     print(f"  ❌ ERROR: {e}")
-
-# Test 4: sklearn
 print("\nTEST 4: scikit-learn...")
 try:
     import numpy as np
@@ -79,8 +68,6 @@ try:
 except Exception as e:
     print(f"  ❌ sklearn ERROR: {e}")
     traceback.print_exc()
-
-# Test 5: Full forecast run
 print("\nTEST 5: Full forecast simulation...")
 try:
     conn = mysql.connector.connect(
@@ -92,17 +79,14 @@ try:
     product = cursor.fetchone()
     cursor.close()
     conn.close()
-    
     if product:
         print(f"  Testing with: {product['name']}")
         print(f"  current_stock type: {type(product['current_stock']).__name__} = {product['current_stock']}")
         print(f"  reorder_level type: {type(product['reorder_level']).__name__} = {product['reorder_level']}")
-        
         stock = int(product['current_stock']) if isinstance(product['current_stock'], Decimal) else product['current_stock']
         reorder = int(product['reorder_level']) if isinstance(product['reorder_level'], Decimal) else product['reorder_level']
         print(f"  ✅ After conversion: stock={stock}, reorder={reorder}")
 except Exception as e:
     print(f"  ❌ ERROR: {e}")
     traceback.print_exc()
-
 print("\n✅ All tests done. Check above for ❌ errors.")

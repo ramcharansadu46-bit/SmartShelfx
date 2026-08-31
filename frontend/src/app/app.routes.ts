@@ -4,23 +4,12 @@ import { adminGuard, managerGuard } from './shared/guards/role.guard';
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { DOCUMENT } from '@angular/common';
-
-/**
- * Port-based root guard.
- * Port 4201 → /auth/admin   (Admin portal)
- * Port 4200 → /auth/login   (Manager / Vendor portal)
- */
 const portGuard: CanActivateFn = () => {
     const router = inject(Router);
     const doc = inject(DOCUMENT);
     const port = doc.defaultView?.location.port ?? '';
     return router.createUrlTree(port === '4201' ? ['/auth/admin'] : ['/auth/login']);
 };
-
-/**
- * Prevents admin-port users from ever landing on the regular login page.
- * If on port 4201 and visiting /auth/login → redirect to /auth/admin.
- */
 const loginPageGuard: CanActivateFn = () => {
     const router = inject(Router);
     const doc = inject(DOCUMENT);
@@ -30,7 +19,6 @@ const loginPageGuard: CanActivateFn = () => {
     }
     return true;
 };
-
 export const routes: Routes = [
     {
         path: 'auth',

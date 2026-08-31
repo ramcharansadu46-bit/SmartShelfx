@@ -8,7 +8,6 @@ const { authenticate } = require('../middleware/auth.middleware');
 const router = express.Router();
 const resetTokenStore = {};
 const PW_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@#_]).{8,}$/;
-
 router.post('/register', async (req, res) => {
     try {
         const { name, username, email, personal_email, password, role } = req.body;
@@ -28,7 +27,6 @@ router.post('/register', async (req, res) => {
         return res.status(500).json({ error: 'Registration failed: ' + err.message });
     }
 });
-
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -40,21 +38,17 @@ router.post('/login', async (req, res) => {
         return res.json({ token, userId: user.id, name: user.name, role: user.role, email: user.email });
     } catch (err) { return res.status(500).json({ error: 'Login failed: ' + err.message }); }
 });
-
 router.post('/forgot-password', async (req, res) => {
     try {
         const { email, personal_email } = req.body;
         if (!email) return res.status(400).json({ error: 'Email is required' });
         const user = await User.findOne({ where: { email: email.toLowerCase().trim() } });
         if (!user) return res.json({ success: true, message: 'If this email exists, a reset link has been sent.' });
-
-        // Verify personal email matches what was registered
         if (personal_email && user.personal_email) {
             if (user.personal_email.toLowerCase() !== personal_email.toLowerCase().trim()) {
                 return res.status(400).json({ error: 'Personal email does not match our records. Use the Gmail you entered during registration.' });
             }
         }
-        // Send to personal email if set, otherwise fall back to system email
         const sendToEmail = user.personal_email || personal_email || user.email;
         const rawToken = crypto.randomBytes(32).toString('hex');
         resetTokenStore[rawToken] = { userId: user.id, email: user.email, expiresAt: Date.now() + 15 * 60 * 1000 };
@@ -80,7 +74,6 @@ router.post('/forgot-password', async (req, res) => {
         return res.status(500).json({ error: 'Failed to send reset email. Check SMTP_USER and SMTP_PASS in .env' });
     }
 });
-
 router.post('/reset-password', async (req, res) => {
     try {
         const { token, email, password } = req.body;
@@ -98,7 +91,6 @@ router.post('/reset-password', async (req, res) => {
         return res.status(500).json({ error: 'Reset failed: ' + err.message });
     }
 });
-
 router.get('/me', authenticate, async (req, res) => {
     try {
         const user = await User.findByPk(req.user.id, { attributes: ['id', 'name', 'username', 'email', 'role', 'createdAt'] });
@@ -106,17 +98,13 @@ router.get('/me', authenticate, async (req, res) => {
         return res.json(user);
     } catch (err) { return res.status(500).json({ error: err.message }); }
 });
-
 router.get('/users', authenticate, async (req, res) => {
     try {
         const users = await User.findAll({ attributes: ['id', 'name', 'username', 'email', 'personal_email', 'role', 'password', 'createdAt'], order: [['name', 'ASC']] });
-        // Map password field to password_hash for frontend display
         const mapped = users.map(u => ({ ...u.toJSON(), password_hash: u.password }));
         return res.json(mapped);
     } catch (err) { return res.status(500).json({ error: err.message }); }
 });
-
-// POST /auth/admin-reset-password — Admin resets any user's password
 router.post('/admin-reset-password', authenticate, async (req, res) => {
     try {
         if (req.user.role !== 'ADMIN') return res.status(403).json({ error: 'Admin only' });
@@ -131,8 +119,6 @@ router.post('/admin-reset-password', authenticate, async (req, res) => {
         return res.status(500).json({ error: 'Reset failed: ' + err.message });
     }
 });
-
-// POST /auth/reset-direct — user resets own password using their email (no token needed)
 router.post('/reset-direct', async (req, res) => {
     try {
         const { email, newPassword } = req.body;
@@ -152,9 +138,6 @@ router.post('/reset-direct', async (req, res) => {
         return res.status(500).json({ error: 'Reset failed: ' + err.message });
     }
 });
-
-
-// DELETE /auth/users/:id — Admin deletes a user
 router.delete('/users/:id', authenticate, async (req, res) => {
     try {
         if (req.user.role !== 'ADMIN') return res.status(403).json({ error: 'Admin only' });
@@ -168,5 +151,4 @@ router.delete('/users/:id', authenticate, async (req, res) => {
         return res.status(500).json({ error: 'Delete failed: ' + err.message });
     }
 });
-
 module.exports = router;

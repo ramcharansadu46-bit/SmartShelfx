@@ -1,15 +1,12 @@
 <div class="forecasting animate-fade">
-
     <div class="page-title">🤖 AI <span>Demand Forecasting</span></div>
     <p class="subtitle">scikit-learn LinearRegression predicts {{ selectedHorizon }}-day stock demand from transaction
         history</p>
-
     <div class="ai-status-badge">
         <div class="pulse"></div>
         ML SERVICE · scikit-learn · pandas · numpy · FastAPI
         <span *ngIf="lastRunTime" class="run-time">Last run: {{ lastRunTime }}</span>
     </div>
-
     <div class="toolbar">
         <select class="filter-sel" [(ngModel)]="selectedHorizon">
             <option value="7">7-Day Forecast</option>
@@ -25,11 +22,7 @@
             {{ triggering ? '⟳ Sending...' : '🔔 Notify Vendors' }}
         </button>
     </div>
-
-    <!-- Charts Row -->
     <div class="chart-row">
-
-        <!-- ── Bar Chart: ALL Products with scroll ── -->
         <div class="chart-card chart-wide">
             <div class="card-header">
                 <div>
@@ -45,16 +38,12 @@
                     <span class="pill pill-low">🟢 Low</span>
                 </div>
             </div>
-
-            <!-- Canvas -->
             <div class="chart-wrap">
                 <div class="chart-empty" [style.display]="forecasts.length === 0 && !loading ? 'flex' : 'none'">
                     <span>⚠ No forecast data — click "🚀 Run Forecast Now"</span>
                 </div>
                 <canvas id="ssx-bar-canvas" style="display:block"></canvas>
             </div>
-
-            <!-- Scroll Bar -->
             <div class="scroll-section" *ngIf="totalBars > visibleCount">
                 <div class="scroll-labels">
                     <span class="scroll-hint">◀ Scroll to see all {{ totalBars }} products ▶</span>
@@ -62,13 +51,10 @@
                 <div class="scroll-track">
                     <input type="range" class="scroll-slider" [min]="0" [max]="scrollMax" [value]="_scrollIndex"
                         (input)="onScroll(+$any($event.target).value)" (change)="onScroll(+$any($event.target).value)">
-                    <!-- Thumb position indicator -->
                     <div class="scroll-fill" [style.width.%]="scrollPercent"></div>
                 </div>
             </div>
         </div>
-
-        <!-- ── Doughnut: Risk Distribution ── -->
         <div class="chart-card chart-narrow">
             <div class="card-header">
                 <span class="card-title">Stockout Risk</span>
@@ -96,10 +82,7 @@
                         style="color:#00ffcc">{{ riskCounts.LOW }}</strong></div>
             </div>
         </div>
-
     </div>
-
-    <!-- Forecast Table -->
     <div class="table-card">
         <div class="table-topbar">
             Forecast Summary — Next {{ selectedHorizon }} Days
@@ -177,5 +160,4 @@
             </table>
         </div>
     </div>
-
 </div>

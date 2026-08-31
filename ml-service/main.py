@@ -3,7 +3,6 @@ import traceback
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any
 from decimal import Decimal
-
 import numpy as np
 import pandas as pd
 import pymysql
@@ -15,11 +14,8 @@ from pydantic import BaseModel, ConfigDict
 from xgboost import XGBRegressor
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_absolute_error
-
 load_dotenv()
-
 app = FastAPI(title="SmartShelfX ML Service", version="1.0.0")
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -27,9 +23,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 from urllib.parse import urlparse
-
 def get_db_config():
     db_url = os.getenv("MYSQL_URL") or os.getenv("DATABASE_URL")
     config = {
@@ -53,50 +47,33 @@ def get_db_config():
             "user": os.getenv("DB_USER", "root"),
             "password": os.getenv("DB_PASS", ""),
         })
-
     if os.getenv("DB_SSL", "false").lower() == "true":
         config["ssl"] = {"reject_unauthorized": False}
-
     return config
-
 FORECAST_DAYS        = int(os.getenv("FORECAST_DAYS",        7))
 MIN_TRAINING_RECORDS = int(os.getenv("MIN_TRAINING_RECORDS", 5))
-
-
-# ── Helpers ───────────────────────────────────────────────────────────
-
 def to_int(v):
     if v is None: return 0
     if isinstance(v, Decimal): return int(v)
     return int(v)
-
 def to_float(v):
     if v is None: return 0.0
     if isinstance(v, Decimal): return float(v)
     return float(v)
-
 def serialize_row(row: dict) -> dict:
     return {k: (float(v) if isinstance(v, Decimal) else v) for k, v in row.items()}
-
-
-# ── Pydantic Models ───────────────────────────────────────────────────
-
 class ForecastItem(BaseModel):
     product_id:    int
     forecast_date: str
     predicted_qty: float
     confidence:    float
     risk_level:    str
-
-
 class ForecastResponse(BaseModel):
     model_config   = ConfigDict(protected_namespaces=())
     forecasts:      List[ForecastItem]
     model_accuracy: Optional[float]
     trained_at:     str
     total_products: int
-
-
 class ProductForecastResponse(BaseModel):
     model_config   = ConfigDict(protected_namespaces=())
     product_id:     int
@@ -106,18 +83,12 @@ class ProductForecastResponse(BaseModel):
     reorder_level:  int
     forecasts:      List[ForecastItem]
     model_accuracy: Optional[float]
-
-
-# ── Database ──────────────────────────────────────────────────────────
-
 def get_connection():
     try:
         return pymysql.connect(**get_db_config())
     except pymysql.Error as e:
         print(f"[DB ERROR] {e}")
         raise HTTPException(status_code=503, detail=f"Database connection failed: {str(e)}")
-
-
 def get_all_products() -> List[Dict[str, Any]]:
     conn   = get_connection()
     cursor = conn.cursor()
@@ -126,8 +97,6 @@ def get_all_products() -> List[Dict[str, Any]]:
     cursor.close()
     conn.close()
     return [{**r, "current_stock": to_int(r["current_stock"]), "reorder_level": to_int(r["reorder_level"])} for r in rows]
-
-
 def get_transactions(product_id: int) -> pd.DataFrame:
     conn   = get_connection()
     cursor = conn.cursor()
@@ -141,18 +110,12 @@ def get_transactions(product_id: int) -> pd.DataFrame:
     rows   = cursor.fetchall()
     cursor.close()
     conn.close()
-
     if not rows:
         return pd.DataFrame(columns=["tx_date", "type", "daily_qty"])
-
     df = pd.DataFrame(rows)
     df["tx_date"]   = pd.to_datetime(df["tx_date"])
     df["daily_qty"] = df["daily_qty"].apply(to_float)
     return df
-
-
-# ── ML Logic ──────────────────────────────────────────────────────────
-
 def build_features(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     df["day_of_week"]    = df["tx_date"].dt.dayofweek
@@ -161,8 +124,6 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
     df["week_of_year"]   = df["tx_date"].dt.isocalendar().week.astype(int)
     df["rolling_7d_avg"] = df["daily_qty"].rolling(7, min_periods=1).mean()
     return df
-
-
 def risk_level(current_stock: int, reorder_level: int, predicted_qty: float) -> str:
     if current_stock == 0:
         return "CRITICAL"
@@ -176,22 +137,14 @@ def risk_level(current_stock: int, reorder_level: int, predicted_qty: float) -> 
     if current_stock <= reorder_level * 1.5 or days < 14:
         return "MEDIUM"
     return "LOW"
-
-
 FEATURES = ["day_of_week", "day_of_month", "month", "week_of_year", "rolling_7d_avg"]
-
-
 def forecast_product(product: Dict[str, Any]) -> Dict[str, Any]:
     pid     = to_int(product["id"])
     stock   = to_int(product["current_stock"])
     reorder = to_int(product["reorder_level"])
-
     df      = get_transactions(pid)
     out_df  = df[df["type"] == "OUT"].copy()
-
     target_date = (datetime.now() + timedelta(days=FORECAST_DAYS)).date()
-
-    # Not enough data — use simple estimate
     if len(out_df) < MIN_TRAINING_RECORDS:
         avg_daily = max(stock * 0.05, 1.0)
         predicted = round(avg_daily * FORECAST_DAYS, 2)
@@ -202,15 +155,12 @@ def forecast_product(product: Dict[str, Any]) -> Dict[str, Any]:
             "confidence":    0.50,
             "risk_level":    risk_level(stock, reorder, predicted)
         }
-
     out_df  = build_features(out_df)
     X       = out_df[FEATURES].values
     y       = out_df["daily_qty"].values
-
     split       = max(1, int(len(X) * 0.8))
     X_tr, X_va  = X[:split], X[split:]
     y_tr, y_va  = y[:split], y[split:]
-
     scaler      = StandardScaler()
     X_tr_sc     = scaler.fit_transform(X_tr)
     model       = XGBRegressor(
@@ -223,13 +173,11 @@ def forecast_product(product: Dict[str, Any]) -> Dict[str, Any]:
         verbosity=0
     )
     model.fit(X_tr_sc, y_tr)
-
     confidence  = 0.75
     if len(X_va) > 0:
         y_pred  = model.predict(scaler.transform(X_va))
         mae     = mean_absolute_error(y_va, y_pred)
         confidence = max(0.40, min(0.99, 1.0 - mae / (np.mean(y_va) + 1e-6)))
-
     rolling_avg  = float(out_df["daily_qty"].tail(7).mean())
     future_dates = [datetime.now().date() + timedelta(days=i) for i in range(1, FORECAST_DAYS + 1)]
     future_X     = pd.DataFrame([{
@@ -239,10 +187,8 @@ def forecast_product(product: Dict[str, Any]) -> Dict[str, Any]:
         "week_of_year":   d.isocalendar()[1],
         "rolling_7d_avg": rolling_avg
     } for d in future_dates])[FEATURES].values
-
     preds    = np.clip(model.predict(scaler.transform(future_X)), 0, None)
     total    = float(np.sum(preds))
-
     return {
         "product_id":    pid,
         "forecast_date": target_date.isoformat(),
@@ -250,8 +196,6 @@ def forecast_product(product: Dict[str, Any]) -> Dict[str, Any]:
         "confidence":    round(float(confidence), 4),
         "risk_level":    risk_level(stock, reorder, total)
     }
-
-
 def save_forecast(f: Dict[str, Any]):
     conn   = get_connection()
     cursor = conn.cursor()
@@ -263,10 +207,6 @@ def save_forecast(f: Dict[str, Any]):
     conn.commit()
     cursor.close()
     conn.close()
-
-
-# ── Routes ────────────────────────────────────────────────────────────
-
 @app.get("/")
 def health_check():
     try:
@@ -280,17 +220,13 @@ def health_check():
     except Exception as e:
         db = f"error: {e}"
     return {"status": "ok", "service": "SmartShelfX ML", "database": db}
-
-
 @app.post("/forecast", response_model=ForecastResponse)
 def run_forecast():
     try:
         products  = get_all_products()
         forecasts = []
         errors    = []
-
         print(f"\n[FORECAST] Starting for {len(products)} products...")
-
         for p in products:
             try:
                 result = forecast_product(p)
@@ -301,10 +237,8 @@ def run_forecast():
                 print(f"  ✗ Product {p['id']} ({p.get('name','?')}): {e}")
                 traceback.print_exc()
                 errors.append({"product_id": p["id"], "error": str(e)})
-
         avg_conf = sum(f.confidence for f in forecasts) / len(forecasts) if forecasts else 0.0
         print(f"[FORECAST] Done: {len(forecasts)} success, {len(errors)} failed\n")
-
         return ForecastResponse(
             forecasts=forecasts,
             model_accuracy=round(avg_conf, 4),
@@ -316,8 +250,6 @@ def run_forecast():
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
-
-
 @app.get("/forecast/{product_id}", response_model=ProductForecastResponse)
 def forecast_single(product_id: int):
     try:
@@ -327,17 +259,13 @@ def forecast_single(product_id: int):
         p = cursor.fetchone()
         cursor.close()
         conn.close()
-
         if not p:
             raise HTTPException(status_code=404, detail="Product not found")
-
         p["current_stock"] = to_int(p["current_stock"])
         p["reorder_level"] = to_int(p["reorder_level"])
-
         result    = forecast_product(p)
         save_forecast(result)
         forecasts = [ForecastItem(**result)]
-
         return ProductForecastResponse(
             product_id=to_int(p["id"]),
             product_name=p["name"],
@@ -352,8 +280,6 @@ def forecast_single(product_id: int):
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
-
-
 @app.get("/analytics/demand-summary")
 def demand_summary():
     try:
@@ -371,7 +297,6 @@ def demand_summary():
             ORDER BY total_out_30d DESC
         """)
         products = [serialize_row(r) for r in cursor.fetchall()]
-
         cursor.execute("""
             SELECT fr.risk_level, COUNT(*) AS count
             FROM forecast_results fr
@@ -383,15 +308,12 @@ def demand_summary():
         risk_dist = [serialize_row(r) for r in cursor.fetchall()]
         cursor.close()
         conn.close()
-
         return {"products": products, "risk_distribution": risk_dist, "generated_at": datetime.utcnow().isoformat() + "Z"}
     except HTTPException:
         raise
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
-
-
 @app.get("/analytics/velocity")
 def stock_velocity():
     try:
@@ -419,8 +341,6 @@ def stock_velocity():
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
-
-
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("ML_PORT", 8000))

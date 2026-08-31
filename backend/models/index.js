@@ -1,6 +1,5 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
-
 const User = sequelize.define('User', {
     id: {
         type: DataTypes.BIGINT,
@@ -38,7 +37,6 @@ const User = sequelize.define('User', {
     tableName: 'users',
     timestamps: true
 });
-
 const Product = sequelize.define('Product', {
     id: {
         type: DataTypes.BIGINT,
@@ -85,7 +83,6 @@ const Product = sequelize.define('Product', {
     tableName: 'products',
     timestamps: true
 });
-
 const StockTransaction = sequelize.define('StockTransaction', {
     id: {
         type: DataTypes.BIGINT,
@@ -121,7 +118,6 @@ const StockTransaction = sequelize.define('StockTransaction', {
     tableName: 'stock_transactions',
     timestamps: false
 });
-
 const PurchaseOrder = sequelize.define('PurchaseOrder', {
     id: {
         type: DataTypes.BIGINT,
@@ -158,7 +154,6 @@ const PurchaseOrder = sequelize.define('PurchaseOrder', {
     tableName: 'purchase_orders',
     timestamps: false
 });
-
 const Alert = sequelize.define('Alert', {
     id: {
         type: DataTypes.BIGINT,
@@ -193,9 +188,8 @@ const Alert = sequelize.define('Alert', {
     }
 }, {
     tableName: 'alerts',
-    timestamps: false   // created_at managed manually above
+    timestamps: false
 });
-
 const ForecastResult = sequelize.define('ForecastResult', {
     id: {
         type: DataTypes.BIGINT,
@@ -234,30 +228,22 @@ const ForecastResult = sequelize.define('ForecastResult', {
     tableName: 'forecast_results',
     timestamps: false
 });
-
 Product.belongsTo(User, { foreignKey: 'vendor_id', as: 'vendor' });
 User.hasMany(Product, { foreignKey: 'vendor_id', as: 'products' });
-
 StockTransaction.belongsTo(Product, { foreignKey: 'product_id', as: 'Product' });
 Product.hasMany(StockTransaction, { foreignKey: 'product_id', as: 'transactions' });
-
 StockTransaction.belongsTo(User, { foreignKey: 'handled_by', as: 'handler' });
 User.hasMany(StockTransaction, { foreignKey: 'handled_by', as: 'transactions' });
-
 PurchaseOrder.belongsTo(Product, { foreignKey: 'product_id', as: 'Product' });
 Product.hasMany(PurchaseOrder, { foreignKey: 'product_id', as: 'orders' });
-
 PurchaseOrder.belongsTo(User, { foreignKey: 'vendor_id', as: 'vendor' });
 User.hasMany(PurchaseOrder, { foreignKey: 'vendor_id', as: 'orders' });
-
 Alert.belongsTo(Product, { foreignKey: 'product_id', as: 'Product' });
 Product.hasMany(Alert, { foreignKey: 'product_id', as: 'alerts' });
 Alert.belongsTo(User, { foreignKey: 'vendor_id', as: 'Vendor' });
 User.hasMany(Alert, { foreignKey: 'vendor_id', as: 'vendorAlerts' });
-
 ForecastResult.belongsTo(Product, { foreignKey: 'product_id', as: 'Product' });
 Product.hasMany(ForecastResult, { foreignKey: 'product_id', as: 'forecasts' });
-
 module.exports = {
     sequelize,
     User,

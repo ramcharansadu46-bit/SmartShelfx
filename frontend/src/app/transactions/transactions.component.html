@@ -1,15 +1,10 @@
 <div class="transactions animate-fade">
-
     <div class="page-title">Stock <span>Transactions</span></div>
-
-    <!-- Tabs -->
     <div class="tabs-bar">
         <button class="tab" [class.active]="activeTab==='IN'" (click)="switchTab('IN')">📥 Stock-In</button>
         <button class="tab" [class.active]="activeTab==='OUT'" (click)="switchTab('OUT')">📤 Stock-Out</button>
         <button class="tab" [class.active]="activeTab==='HISTORY'" (click)="switchTab('HISTORY')">📋 History</button>
     </div>
-
-    <!-- ── STOCK-IN FORM ── -->
     <div *ngIf="activeTab==='IN'" class="form-card animate-up">
         <div class="form-card-title">📥 Record Incoming Shipment</div>
         <form [formGroup]="inForm" (ngSubmit)="submitIn()">
@@ -43,8 +38,6 @@
             </button>
         </form>
     </div>
-
-    <!-- ── STOCK-OUT FORM ── -->
     <div *ngIf="activeTab==='OUT'" class="form-card animate-up">
         <div class="form-card-title">📤 Record Dispatch / Sale</div>
         <form [formGroup]="outForm" (ngSubmit)="submitOut()">
@@ -79,8 +72,6 @@
             </button>
         </form>
     </div>
-
-    <!-- ── HISTORY ── -->
     <div *ngIf="activeTab==='HISTORY'" class="animate-fade">
         <div class="toolbar">
             <select class="filter-sel" [(ngModel)]="filterType" (change)="loadTransactions()">
@@ -91,10 +82,8 @@
             <div class="spacer"></div>
             <span class="total-label">{{ total }} transactions</span>
         </div>
-
         <div class="table-card">
             <div class="loading-row" *ngIf="loading">⟳ Loading transactions...</div>
-
             <div style="overflow-x:auto" *ngIf="!loading">
                 <table>
                     <colgroup>
@@ -143,8 +132,6 @@
                     </tbody>
                 </table>
             </div>
-
-            <!-- Pagination -->
             <div class="pagination" *ngIf="totalPages > 1">
                 <button class="page-btn" [disabled]="page === 1" (click)="prevPage()">← Prev</button>
                 <span class="page-info">{{ page }} / {{ totalPages }}</span>
@@ -152,5 +139,4 @@
             </div>
         </div>
     </div>
-
 </div>

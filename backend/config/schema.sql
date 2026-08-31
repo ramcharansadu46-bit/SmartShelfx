@@ -1,7 +1,5 @@
 CREATE DATABASE IF NOT EXISTS smartshelfx CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
 USE smartshelfx;
-
 CREATE TABLE IF NOT EXISTS users (
   id        BIGINT       AUTO_INCREMENT PRIMARY KEY,
   name      VARCHAR(100) NOT NULL,
@@ -12,7 +10,6 @@ CREATE TABLE IF NOT EXISTS users (
   createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
-
 CREATE TABLE IF NOT EXISTS products (
   id            BIGINT        AUTO_INCREMENT PRIMARY KEY,
   name          VARCHAR(100)  NOT NULL,
@@ -30,7 +27,6 @@ CREATE TABLE IF NOT EXISTS products (
   INDEX idx_category (category),
   INDEX idx_vendor   (vendor_id)
 );
-
 CREATE TABLE IF NOT EXISTS stock_transactions (
   id         BIGINT   AUTO_INCREMENT PRIMARY KEY,
   product_id BIGINT   NOT NULL,
@@ -44,7 +40,6 @@ CREATE TABLE IF NOT EXISTS stock_transactions (
   INDEX idx_product_time (product_id, timestamp),
   INDEX idx_type         (type)
 );
-
 CREATE TABLE IF NOT EXISTS purchase_orders (
   id         BIGINT   AUTO_INCREMENT PRIMARY KEY,
   product_id BIGINT   NOT NULL,
@@ -59,10 +54,9 @@ CREATE TABLE IF NOT EXISTS purchase_orders (
   INDEX idx_status    (status),
   INDEX idx_vendor_po (vendor_id)
 );
-
 CREATE TABLE IF NOT EXISTS alerts (
   id         BIGINT     AUTO_INCREMENT PRIMARY KEY,
-  product_id BIGINT, 
+  product_id BIGINT,
   vendor_id  BIGINT,
   type       ENUM('LOW_STOCK','OUT_OF_STOCK','EXPIRY','RESTOCK_SUGGESTED') NOT NULL,
   message    TEXT       NOT NULL,
@@ -72,7 +66,6 @@ CREATE TABLE IF NOT EXISTS alerts (
   INDEX idx_is_read    (is_read),
   INDEX idx_alert_type (type)
 );
-
 CREATE TABLE IF NOT EXISTS forecast_results (
   id            BIGINT   AUTO_INCREMENT PRIMARY KEY,
   product_id    BIGINT   NOT NULL,
@@ -85,5 +78,3 @@ CREATE TABLE IF NOT EXISTS forecast_results (
   UNIQUE KEY uq_product_date (product_id, forecast_date),
   INDEX idx_risk_level (risk_level)
 );
-
-

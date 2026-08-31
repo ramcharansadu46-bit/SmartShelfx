@@ -4,7 +4,6 @@ import { RouterOutlet, RouterModule, ActivatedRoute, Router, NavigationEnd } fro
 import { SidebarComponent } from '../shared/sidebar/sidebar.component';
 import { TopbarComponent } from '../shared/topbar/topbar.component';
 import { filter, map } from 'rxjs';
-
 const PAGE_TITLES: Record<string, string> = {
     dashboard: 'DASHBOARD OVERVIEW',
     inventory: 'INVENTORY CATALOG',
@@ -14,7 +13,6 @@ const PAGE_TITLES: Record<string, string> = {
     alerts: 'ALERTS & NOTIFICATIONS',
     analytics: 'ANALYTICS & REPORTS',
 };
-
 @Component({
     selector: 'app-layout',
     standalone: true,
@@ -25,7 +23,6 @@ const PAGE_TITLES: Record<string, string> = {
 export class LayoutComponent {
     sidebarCollapsed = signal(false);
     pageTitle = signal('DASHBOARD OVERVIEW');
-
     constructor(private router: Router) {
         this.router.events.pipe(
             filter(e => e instanceof NavigationEnd),
@@ -35,7 +32,6 @@ export class LayoutComponent {
             })
         ).subscribe(title => this.pageTitle.set(title));
     }
-
     toggleSidebar() {
         this.sidebarCollapsed.update(v => !v);
     }

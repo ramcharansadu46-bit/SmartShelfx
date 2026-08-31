@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
 @Component({
     selector: 'app-settings',
     standalone: true,
@@ -17,7 +16,6 @@ export class SettingsComponent {
     forecastHorizon = '7';
     currency = 'INR';
     saved = false;
-
     save() {
         this.saved = true;
         setTimeout(() => this.saved = false, 2500);

@@ -7,9 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '../shared/services/api.service';
 import { AuthService } from '../shared/services/auth.service';
 import { AnalyticsSummary, Alert, PurchaseOrder, Product } from '../shared/models/interfaces';
-
 Chart.register(...registerables);
-
 @Component({
     selector: 'app-dashboard',
     standalone: true,
@@ -18,15 +16,12 @@ Chart.register(...registerables);
     styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
-
     @ViewChild('trendCanvas') trendCanvas!: ElementRef<HTMLCanvasElement>;
     @ViewChild('categoryCanvas') categoryCanvas!: ElementRef<HTMLCanvasElement>;
     @ViewChild('orderStatusCanvas') orderStatusCanvas!: ElementRef<HTMLCanvasElement>;
-
     private trendChart?: Chart;
     private categoryChart?: Chart;
     private orderStatusChart?: Chart;
-
     summary: AnalyticsSummary = { totalProducts: 0, lowStockItems: 0, outOfStockItems: 0, pendingOrders: 0 };
     recentAlerts: Alert[] = [];
     recentOrders: PurchaseOrder[] = [];
@@ -37,7 +32,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     actioningId: number | null = null;
     categories: string[] = [];
     filterCategory = '';
-
     private chartsReady = false;
     private txInData: number[] = [];
     private txOutData: number[] = [];
@@ -45,19 +39,14 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     private catLabels: string[] = [];
     private catData: number[] = [];
     orderStatusData: number[] = [0, 0, 0, 0];
-
     constructor(public auth: AuthService, private api: ApiService, private cdr: ChangeDetectorRef, private router: Router) { }
-
     get isAdmin() { return this.auth.getRole() === 'ADMIN'; }
     get isManager() { return this.auth.getRole() === 'MANAGER'; }
     get isVendor() { return this.auth.getRole() === 'VENDOR'; }
-
     ngOnInit() { this.loadData(); if (this.isVendor) this.loadVendorPending(); }
     ngAfterViewInit() { this.chartsReady = true; this.tick(); }
     ngOnDestroy() { this.trendChart?.destroy(); this.categoryChart?.destroy(); this.orderStatusChart?.destroy(); }
-
     tick() { this.cdr.detectChanges(); setTimeout(() => this.tryBuildCharts(), 60); }
-
     loadVendorPending() {
         this.vendorPendingLoading = true;
         this.api.getOrders({ status: 'PENDING', limit: 50 }).subscribe({
@@ -74,7 +63,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
             }
         });
     }
-
     approveFromDash(id: number) {
         this.actioningId = id;
         this.api.updateOrderStatus(id, 'APPROVED').subscribe({
@@ -86,7 +74,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
             error: () => { this.actioningId = null; }
         });
     }
-
     rejectFromDash(id: number) {
         this.actioningId = id;
         this.api.updateOrderStatus(id, 'CANCELLED').subscribe({
@@ -98,17 +85,15 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
             error: () => { this.actioningId = null; }
         });
     }
-
     loadData() {
         this.loading = true;
         this.api.getAnalyticsSummary().subscribe({ next: s => { this.summary = s; }, error: () => { } });
         this.api.getAlerts({ is_read: false, limit: 5 }).subscribe({ next: r => { this.recentAlerts = r.data; }, error: () => { } });
         if (this.isVendor) {
-            // Vendor: load all their POs for accurate KPI counts
             this.api.getOrders({ limit: 100 }).subscribe({
                 next: r => {
-                    this.recentOrders = r.data.slice(0, 5); // show 5 in table
-                    this.buildOrderStatusData(r.data);       // count from ALL
+                    this.recentOrders = r.data.slice(0, 5);
+                    this.buildOrderStatusData(r.data);
                     this.loading = false; this.tick();
                 },
                 error: () => { this.loading = false; }
@@ -129,7 +114,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
             this.loadFilteredProducts();
         }
     }
-
     buildTrendData(transactions: any[]) {
         const weeks: Record<string, { in: number; out: number }> = {};
         const now = new Date();
@@ -147,7 +131,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         this.txInData = Object.values(weeks).map(w => w.in);
         this.txOutData = Object.values(weeks).map(w => w.out);
     }
-
     loadFilteredProducts() {
         const params: any = { limit: 200 };
         if (this.filterCategory) params.category = this.filterCategory;
@@ -160,16 +143,13 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
             error: () => { }
         });
     }
-
     onCategoryChange() { this.loadFilteredProducts(); }
-
     buildCategoryData(products: any[]) {
         const cats: Record<string, number> = {};
         products.forEach(p => { cats[p.category] = (cats[p.category] || 0) + (p.current_stock || 0); });
         this.catLabels = Object.keys(cats);
         this.catData = Object.values(cats);
     }
-
     buildOrderStatusData(orders: any[]) {
         const c = [0, 0, 0, 0];
         orders.forEach(o => {
@@ -180,7 +160,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         });
         this.orderStatusData = c;
     }
-
     tryBuildCharts() {
         if (!this.chartsReady) return;
         if (!this.isVendor) {
@@ -189,7 +168,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         }
         if (this.isVendor && this.orderStatusCanvas?.nativeElement) this.buildOrderStatusChart();
     }
-
     buildTrendChart() {
         this.trendChart?.destroy();
         this.trendChart = new Chart(this.trendCanvas.nativeElement.getContext('2d')!, {
@@ -207,7 +185,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
             }
         });
     }
-
     buildCategoryChart() {
         this.categoryChart?.destroy();
         const colors = ['#00b4ff', '#00ffcc', '#ffaa00', '#ff4d6d', '#a855f7', '#f97316', '#06b6d4', '#84cc16'];
@@ -217,7 +194,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
             options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { legend: { position: 'bottom', labels: { color: 'rgba(255,255,255,0.55)', boxWidth: 10, font: { size: 11 }, padding: 12 } } } }
         });
     }
-
     buildOrderStatusChart() {
         this.orderStatusChart?.destroy();
         this.orderStatusChart = new Chart(this.orderStatusCanvas.nativeElement.getContext('2d')!, {
@@ -226,21 +202,18 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
             options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'bottom', labels: { color: 'rgba(255,255,255,0.55)', boxWidth: 10, font: { size: 11 }, padding: 10 } } } }
         });
     }
-
     getStatusClass(stock: number, reorder: number): string {
         if (stock === 0) return 'out';
         if (stock <= reorder / 2) return 'crit';
         if (stock <= reorder) return 'low';
         return 'ok';
     }
-
     getStatusLabel(stock: number, reorder: number): string {
         if (stock === 0) return 'Out of Stock';
         if (stock <= reorder / 2) return 'Critical';
         if (stock <= reorder) return 'Low Stock';
         return 'In Stock';
     }
-
     getOrderClass(status: string): string {
         const map: Record<string, string> = { PENDING: 'pend', APPROVED: 'appr', DISPATCHED: 'disp', DELIVERED: 'ok', CANCELLED: 'crit' };
         return map[status] || 'pend';

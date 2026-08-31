@@ -1,8 +1,6 @@
 const { Sequelize } = require('sequelize');
-
 const dbUrl = process.env.MYSQL_URL || process.env.DATABASE_URL;
 let sequelize;
-
 const dialectOptions = {};
 if (process.env.DB_SSL === 'true' || (process.env.NODE_ENV === 'production' && process.env.DB_SSL !== 'false')) {
     dialectOptions.ssl = {
@@ -10,7 +8,6 @@ if (process.env.DB_SSL === 'true' || (process.env.NODE_ENV === 'production' && p
         rejectUnauthorized: false
     };
 }
-
 if (dbUrl) {
     sequelize = new Sequelize(dbUrl, {
         dialect: 'mysql',
@@ -51,5 +48,4 @@ if (dbUrl) {
         }
     );
 }
-
 module.exports = { sequelize };

@@ -1,9 +1,5 @@
 <div class="dashboard">
-
-    <!-- ── ADMIN / MANAGER DASHBOARD ─────────────────────────────── -->
     <ng-container *ngIf="!isVendor">
-
-        <!-- Category Filter -->
         <div class="dash-filter-bar">
             <span class="filter-label">📂 Filter by Category:</span>
             <select class="cat-select" [(ngModel)]="filterCategory" (change)="onCategoryChange()">
@@ -12,8 +8,6 @@
             </select>
             <span class="cat-count" *ngIf="filterCategory">Showing: <strong>{{ filterCategory }}</strong></span>
         </div>
-
-        <!-- KPI cards -->
         <div class="kpi-grid">
             <div class="kpi-card">
                 <div class="kpi-icon kpi-blue">📦</div>
@@ -44,8 +38,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Charts row -->
         <div class="charts-row">
             <div class="chart-card chart-wide">
                 <div class="card-title">
@@ -60,11 +52,7 @@
                 <div class="chart-wrap"><canvas #categoryCanvas></canvas></div>
             </div>
         </div>
-
-        <!-- Tables row -->
         <div class="tables-row">
-
-            <!-- Low Stock Items -->
             <div class="table-card">
                 <div class="card-title">
                     <span>⚠️ Low Stock Items</span>
@@ -104,8 +92,6 @@
                     </table>
                 </div>
             </div>
-
-            <!-- Recent Purchase Orders -->
             <div class="table-card">
                 <div class="card-title">
                     <span>🛒 Recent Purchase Orders</span>
@@ -145,15 +131,9 @@
                     </table>
                 </div>
             </div>
-
         </div>
-
     </ng-container>
-
-    <!-- ── VENDOR DASHBOARD ───────────────────────────────────────── -->
     <ng-container *ngIf="isVendor">
-
-        <!-- KPI cards -->
         <div class="kpi-grid">
             <div class="kpi-card">
                 <div class="kpi-icon kpi-amber">🕐</div>
@@ -184,8 +164,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- ── Pending Approvals Widget — always visible ────────── -->
         <div class="vendor-pending-section">
             <div class="vendor-pending-header">
                 <span>🕐 Pending Approvals</span>
@@ -216,8 +194,6 @@
                 ✅ No pending approvals at the moment.
             </div>
         </div>
-
-        <!-- Vendor charts + orders -->
         <div class="charts-row">
             <div class="chart-card chart-narrow">
                 <div class="card-title"><span>📊 Order Status</span></div>
@@ -263,7 +239,5 @@
                 </div>
             </div>
         </div>
-
     </ng-container>
-
 </div>

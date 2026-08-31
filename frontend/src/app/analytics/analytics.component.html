@@ -1,8 +1,5 @@
 <div class="analytics animate-fade">
-
     <div class="page-title">Analytics & <span>Reports</span></div>
-
-    <!-- ── KPI Cards ─────────────────────────────────────────────── -->
     <div class="kpi-grid">
         <div class="kpi-card blue">
             <span class="kpi-icon">📦</span>
@@ -41,8 +38,6 @@
             <div class="kpi-sub">Successfully fulfilled</div>
         </div>
     </div>
-
-    <!-- ── Row 1: Stock Trend + PO Status ────────────────────────── -->
     <div class="charts-row">
         <div class="chart-card chart-wide">
             <div class="chart-card-header">
@@ -76,8 +71,6 @@
             </div>
         </div>
     </div>
-
-    <!-- ── Row 2: Category Breakdown + Top Restocked ─────────────── -->
     <div class="charts-row">
         <div class="chart-card chart-narrow">
             <div class="card-title">🗂️ Stock by Category</div>
@@ -102,8 +95,6 @@
             <div class="chart-empty" *ngIf="topItems.length === 0">No restock transactions yet</div>
         </div>
     </div>
-
-    <!-- ── Row 3: Low Stock Table ─────────────────────────────────── -->
     <div class="table-card">
         <div class="card-title">⚠️ Low Stock & Critical Products</div>
         <div class="loading-row" *ngIf="loading">⟳ Loading...</div>
@@ -140,5 +131,4 @@
             </table>
         </div>
     </div>
-
 </div>

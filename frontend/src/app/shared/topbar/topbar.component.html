@@ -1,28 +1,21 @@
 <header class="topbar">
-
     <div class="topbar-left">
         <button class="menu-btn" (click)="sidebarToggle.emit()">☰</button>
         <div class="page-title-display">
             <span class="title-text">{{ pageTitle }}</span>
         </div>
     </div>
-
     <div class="topbar-right">
-
-        <!-- Notification Bell -->
         <div class="notif-wrap" (click)="toggleDropdown($event)">
             <button class="icon-btn notif-btn">
                 🔔
                 <span class="badge" *ngIf="unreadCount > 0">{{ unreadCount > 9 ? '9+' : unreadCount }}</span>
             </button>
-
-            <!-- Dropdown -->
             <div class="notif-dropdown" *ngIf="showDropdown" (click)="$event.stopPropagation()">
                 <div class="notif-header">
                     <span>Notifications</span>
                     <a routerLink="/alerts" class="view-all">View all →</a>
                 </div>
-
                 <div class="notif-list" *ngIf="alerts.length > 0">
                     <div class="notif-item" *ngFor="let alert of alerts" [class.unread]="!alert.is_read"
                         (click)="markRead(alert.id)">
@@ -33,14 +26,11 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="notif-empty" *ngIf="alerts.length === 0">
                     <span>✅ All caught up!</span>
                 </div>
             </div>
         </div>
-
-        <!-- User chip -->
         <div class="user-chip">
             <div class="avatar">{{ auth.getInitials() }}</div>
             <div class="user-meta">
@@ -48,8 +38,5 @@
                 <span class="role">{{ auth.getRole() }}</span>
             </div>
         </div>
-
     </div>
 </header>
-
-<!-- Overlay to close dropdown -->

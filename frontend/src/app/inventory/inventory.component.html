@@ -1,13 +1,10 @@
 <div class="inventory animate-fade">
-
     <div class="page-header">
         <div>
             <div class="page-title">Inventory <span>Catalog</span></div>
             <p class="page-sub">Manage your products, stock levels and categories</p>
         </div>
     </div>
-
-    <!-- Toolbar -->
     <div class="toolbar">
         <div class="toolbar-left">
             <div class="search-wrap">
@@ -40,8 +37,6 @@
             <button class="btn btn-primary" (click)="openAdd()">＋ Add Product</button>
         </div>
     </div>
-
-    <!-- Import Error Panel -->
     <div class="import-error-panel" *ngIf="importError">
         <div class="error-icon">⚠️</div>
         <div class="error-body">
@@ -117,8 +112,6 @@
             </div>
         </form>
     </div>
-
-    <!-- Table Card -->
     <div class="table-card">
         <div class="table-topbar">
             <span class="total-count">
@@ -126,14 +119,10 @@
             </span>
             <span class="page-info">Page {{ page }} of {{ totalPages }}</span>
         </div>
-
-        <!-- Loading -->
         <div class="loading-row" *ngIf="loading">
             <div class="spinner"></div>
             <span>Loading inventory...</span>
         </div>
-
-        <!-- Table -->
         <div class="table-wrap" *ngIf="!loading">
             <table>
                 <colgroup>
@@ -197,8 +186,6 @@
                 </tbody>
             </table>
         </div>
-
-        <!-- Pagination -->
         <div class="pagination" *ngIf="totalPages > 1">
             <button class="page-btn" [disabled]="page === 1" (click)="prevPage()">← Prev</button>
             <div class="page-nums">
@@ -209,8 +196,6 @@
             <button class="page-btn" [disabled]="page >= totalPages" (click)="nextPage()">Next →</button>
         </div>
     </div>
-
-    <!-- Import Format Help -->
     <div class="csv-help">
         <div class="help-row">
             <strong>📋 Supported Formats:</strong>
@@ -239,5 +224,4 @@
         </div>
         <button class="btn btn-ghost btn-sm" (click)="downloadTemplate()">📄 Download Template</button>
     </div>
-
 </div>

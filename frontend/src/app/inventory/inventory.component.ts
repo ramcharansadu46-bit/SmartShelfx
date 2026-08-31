@@ -7,7 +7,6 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { NotificationService } from '../shared/services/notification.service';
 import { Product, User } from '../shared/models/interfaces';
-
 @Component({
     selector: 'app-inventory',
     standalone: true,
@@ -16,7 +15,6 @@ import { Product, User } from '../shared/models/interfaces';
     styleUrls: ['./inventory.component.scss']
 })
 export class InventoryComponent implements OnInit {
-
     products: Product[] = [];
     total = 0;
     page = 1;
@@ -26,29 +24,24 @@ export class InventoryComponent implements OnInit {
     importing = false;
     importError = '';
     editing: Product | null = null;
-
     searchTerm = '';
     filterCategory = '';
     filterStatus = '';
-
     form!: FormGroup;
     categories: string[] = [];
     vendors: User[] = [];
-
     constructor(
         private api: ApiService,
         private notify: NotificationService,
         private fb: FormBuilder,
         private http: HttpClient
     ) { }
-
     ngOnInit() {
         this.buildForm();
         this.loadProducts();
         this.loadCategories();
         this.loadVendors();
     }
-
     buildForm(product?: Product) {
         this.form = this.fb.group({
             name: [product?.name || '', Validators.required],
@@ -61,14 +54,12 @@ export class InventoryComponent implements OnInit {
             expiry_date: [product?.expiry_date || '']
         });
     }
-
     loadCategories() {
         this.api.getCategories().subscribe({
             next: (cats: string[]) => { this.categories = cats; },
             error: () => { }
         });
     }
-
     loadVendors() {
         this.http.get<any>(environment.apiUrl + '/auth/users').subscribe({
             next: res => {
@@ -78,13 +69,11 @@ export class InventoryComponent implements OnInit {
             error: () => { }
         });
     }
-
     getVendorName(id: number | null): string {
         if (!id) return '—';
         const v = this.vendors.find(v => v.id === id);
         return v ? v.name : `V-${id}`;
     }
-
     loadProducts() {
         this.loading = true;
         this.api.getProducts({
@@ -106,22 +95,17 @@ export class InventoryComponent implements OnInit {
             }
         });
     }
-
     openAdd() { this.editing = null; this.buildForm(); this.showForm = true; }
     openEdit(p: Product) { this.editing = p; this.buildForm(p); this.showForm = true; }
     closeForm() { this.showForm = false; this.editing = null; }
-
     saveProduct() {
         if (this.form.invalid) { this.form.markAllAsTouched(); return; }
-
         const data = { ...this.form.value };
         if (!data.vendor_id) data.vendor_id = null;
         if (!data.expiry_date) data.expiry_date = null;
-
         const req = this.editing
             ? this.api.updateProduct(this.editing.id, data)
             : this.api.createProduct(data);
-
         req.subscribe({
             next: () => {
                 this.notify.success(this.editing ? 'Product updated!' : 'Product added!');
@@ -131,7 +115,6 @@ export class InventoryComponent implements OnInit {
             error: err => this.notify.error(err.error?.error || 'Save failed')
         });
     }
-
     deleteProduct(p: Product) {
         if (!confirm(`Delete "${p.name}"? This cannot be undone.`)) return;
         this.api.deleteProduct(p.id).subscribe({
@@ -139,21 +122,17 @@ export class InventoryComponent implements OnInit {
             error: err => this.notify.error(err.error?.error || 'Delete failed')
         });
     }
-
     onFileImport(event: Event) {
         const input = event.target as HTMLInputElement;
         const file = input.files?.[0];
         if (!file) return;
-
         const ext = file.name.split('.').pop()?.toLowerCase();
         const allowed = ['csv', 'xlsx', 'xls', 'tsv', 'ods', 'txt'];
-
         if (!ext || !allowed.includes(ext)) {
             this.notify.error(`Unsupported file type ".${ext}". Allowed: ${allowed.join(', ')}`);
             input.value = '';
             return;
         }
-
         this.importing = true;
         this.api.importProductsSheet(file).subscribe({
             next: res => {
@@ -176,7 +155,6 @@ export class InventoryComponent implements OnInit {
             }
         });
     }
-
     downloadTemplate() {
         const header = 'name,sku,category,current_stock,reorder_level,unit_price,expiry_date';
         const rows = [
@@ -193,19 +171,16 @@ export class InventoryComponent implements OnInit {
         a.click();
         URL.revokeObjectURL(url);
     }
-
     onSearch() { this.page = 1; this.loadProducts(); }
     prevPage() { if (this.page > 1) { this.page--; this.loadProducts(); } }
     nextPage() { if (this.page * this.limit < this.total) { this.page++; this.loadProducts(); } }
     get totalPages() { return Math.max(1, Math.ceil(this.total / this.limit)); }
-
     statusClass(p: Product): string {
         if (p.current_stock === 0) return 'badge-out';
         if (p.current_stock <= p.reorder_level * 0.5) return 'badge-crit';
         if (p.current_stock <= p.reorder_level) return 'badge-low';
         return 'badge-ok';
     }
-
     statusLabel(p: Product): string {
         if (p.current_stock === 0) return 'Out of Stock';
         if (p.current_stock <= p.reorder_level * 0.5) return 'Critical';

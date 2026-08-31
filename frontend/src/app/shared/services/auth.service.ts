@@ -4,23 +4,18 @@ import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthResponse, LoginPayload, RegisterPayload, User } from '../models/interfaces';
-
 @Injectable({ providedIn: 'root' })
 export class AuthService {
     private readonly API = environment.apiUrl;
-
     currentUser = signal<User | null>(null);
     isLoggedIn = signal<boolean>(false);
-
     constructor(private http: HttpClient, private router: Router) {
         this.loadFromStorage();
     }
-
     getLoginRoute(): string {
         const port = window?.location?.port ?? '';
         return port === '4201' ? '/auth/admin' : '/auth/login';
     }
-
     login(payload: LoginPayload): Observable<AuthResponse> {
         return this.http.post<AuthResponse>(`${this.API}/auth/login`, payload).pipe(
             tap(res => {
@@ -39,11 +34,9 @@ export class AuthService {
             })
         );
     }
-
     register(payload: RegisterPayload): Observable<{ success: boolean; userId: number }> {
         return this.http.post<{ success: boolean; userId: number }>(`${this.API}/auth/register`, payload);
     }
-
     logout(): void {
         localStorage.removeItem('ssxToken');
         localStorage.removeItem('ssxRole');
@@ -53,29 +46,23 @@ export class AuthService {
         this.isLoggedIn.set(false);
         this.router.navigate([this.getLoginRoute()]);
     }
-
     getToken(): string | null {
         return localStorage.getItem('ssxToken');
     }
-
     getRole(): string {
         return localStorage.getItem('ssxRole') || '';
     }
-
     getName(): string {
         return localStorage.getItem('ssxName') || '';
     }
-
     getInitials(): string {
         const name = this.getName();
         if (!name) return 'U';
         return name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
     }
-
     isAdmin(): boolean { return this.getRole() === 'ADMIN'; }
     isManager(): boolean { return ['ADMIN', 'MANAGER'].includes(this.getRole()); }
     isVendor(): boolean { return this.getRole() === 'VENDOR'; }
-
     getUserId(): number | null {
         try {
             const token = localStorage.getItem('ssxToken');
@@ -86,13 +73,11 @@ export class AuthService {
             return null;
         }
     }
-
     getMe(): Observable<User> {
         return this.http.get<User>(`${this.API}/auth/me`).pipe(
             tap(user => this.currentUser.set(user))
         );
     }
-
     private loadFromStorage(): void {
         const token = localStorage.getItem('ssxToken');
         if (token) {

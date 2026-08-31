@@ -2,7 +2,6 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../services/auth.service';
-
 interface NavItem {
     label: string;
     icon: string;
@@ -10,9 +9,7 @@ interface NavItem {
     tag?: string;
     queryParams?: Record<string, string>;
 };
-
 interface NavGroup { section: string; roles: string[]; items: NavItem[]; }
-
 @Component({
     selector: 'app-sidebar',
     standalone: true,
@@ -23,9 +20,7 @@ interface NavGroup { section: string; roles: string[]; items: NavItem[]; }
 export class SidebarComponent {
     @Input() collapsed = false;
     @Output() toggle = new EventEmitter<void>();
-
     constructor(public auth: AuthService) { }
-
     navGroups: NavGroup[] = [
         { section: 'OVERVIEW', roles: ['ADMIN', 'MANAGER', 'VENDOR'], items: [{ label: 'Dashboard', icon: '📊', route: '/dashboard' }] },
         { section: 'USER MGMT', roles: ['ADMIN'], items: [{ label: 'Users Management', icon: '👥', route: '/users' }] },
@@ -53,19 +48,15 @@ export class SidebarComponent {
         { section: 'NOTIFICATIONS', roles: ['ADMIN', 'MANAGER', 'VENDOR'], items: [{ label: 'Notifications', icon: '🔔', route: '/alerts' }] },
         { section: 'SYSTEM', roles: ['ADMIN'], items: [{ label: 'Settings', icon: '⚙️', route: '/settings' }] }
     ];
-
     visibleGroups(): NavGroup[] { return this.navGroups.filter(g => g.roles.includes(this.auth.getRole())); }
-
     getRoleBadgeClass(): string {
         const r = this.auth.getRole();
         return r === 'ADMIN' ? 'role-admin' : r === 'MANAGER' ? 'role-manager' : 'role-vendor';
     }
-
     getRoleLabel(): string {
         const r = this.auth.getRole();
         return r === 'ADMIN' ? 'Administrator' : r === 'MANAGER' ? 'Warehouse Manager' : 'Vendor';
     }
-
     onToggle() { this.toggle.emit(); }
     logout() { this.auth.logout(); }
 }
