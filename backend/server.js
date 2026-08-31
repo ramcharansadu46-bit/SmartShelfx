@@ -26,9 +26,12 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.get('/', (req, res) => {
     res.json({ status: 'ok', message: 'SmartShelfX API is running' });
 });
+let dbReady = false;
+let dbError = null;
 app.get('/api/health', (req, res) => {
     res.json({
-        status: 'ok',
+        status: dbReady ? 'ok' : (dbError ? 'db_error' : 'connecting'),
+        database: dbReady ? 'connected' : (dbError || 'connecting'),
         service: 'SmartShelfX API',
         version: '1.0.0',
         timestamp: new Date().toISOString()
@@ -48,20 +51,21 @@ app.use((err, req, res, next) => {
 app.use((req, res) => {
     res.status(404).json({ error: `Route not found: ${req.method} ${req.path}` });
 });
-const start = async () => {
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ SmartShelfX API running on http://localhost:${PORT}`);
+    console.log(`   Health check: http://localhost:${PORT}/api/health`);
+    startPOScheduler();
+});
+const startDB = async () => {
     try {
         await sequelize.authenticate();
         console.log('✅ Database connected.');
         await sequelize.sync({ alter: false });
         console.log('✅ Models synced.');
-        app.listen(PORT, '0.0.0.0', () => {
-            console.log(`✅ SmartShelfX API running on http://localhost:${PORT}`);
-            console.log(`   Health check: http://localhost:${PORT}/api/health`);
-            startPOScheduler();
-        });
+        dbReady = true;
     } catch (err) {
-        console.error('❌ Startup failed:', err.message);
-        process.exit(1);
+        dbError = err.message;
+        console.error('❌ Database connection failed:', err.message);
     }
 };
-start();
+startDB();
