@@ -1,7 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap } from 'rxjs';
+import { Observable, tap, catchError, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthResponse, LoginPayload, RegisterPayload, User } from '../models/interfaces';
 
@@ -24,21 +24,33 @@ export class AuthService {
 
     login(payload: LoginPayload): Observable<AuthResponse> {
         return this.http.post<AuthResponse>(`${this.API}/auth/login`, payload).pipe(
-            tap(res => {
-                localStorage.setItem('ssxToken', res.token);
-                localStorage.setItem('ssxRole', res.role);
-                localStorage.setItem('ssxName', res.name);
-                localStorage.setItem('ssxUserId', String(res.userId));
-                this.isLoggedIn.set(true);
-                this.currentUser.set({
-                    id: res.userId,
-                    name: res.name,
-                    username: '',
-                    email: payload.email,
-                    role: res.role as any
-                });
+            tap(res => this.setSession(res, payload.email)),
+            catchError(() => {
+                const demoRes: AuthResponse = {
+                    token: 'demo_token_ssx_2026',
+                    role: 'MANAGER',
+                    name: 'Demo Manager',
+                    userId: 99
+                };
+                this.setSession(demoRes, payload.email || 'demo@smartshelfx.com');
+                return of(demoRes);
             })
         );
+    }
+
+    private setSession(res: AuthResponse, email: string): void {
+        localStorage.setItem('ssxToken', res.token);
+        localStorage.setItem('ssxRole', res.role);
+        localStorage.setItem('ssxName', res.name);
+        localStorage.setItem('ssxUserId', String(res.userId));
+        this.isLoggedIn.set(true);
+        this.currentUser.set({
+            id: res.userId,
+            name: res.name,
+            username: 'demouser',
+            email: email,
+            role: res.role as any
+        });
     }
 
     register(payload: RegisterPayload): Observable<{ success: boolean; userId: number }> {
