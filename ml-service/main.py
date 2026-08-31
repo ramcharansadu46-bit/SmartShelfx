@@ -28,15 +28,36 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-DB_CONFIG = {
-    "host":     os.getenv("DB_HOST",   "localhost"),
-    "port":     int(os.getenv("DB_PORT", 3306)),
-    "db":       os.getenv("DB_NAME",   "smartshelfx"),
-    "user":     os.getenv("DB_USER",   "root"),
-    "password": os.getenv("DB_PASS",   ""),
-    "charset":  "utf8mb4",
-    "cursorclass": pymysql.cursors.DictCursor,
-}
+from urllib.parse import urlparse
+
+def get_db_config():
+    db_url = os.getenv("MYSQL_URL") or os.getenv("DATABASE_URL")
+    config = {
+        "charset": "utf8mb4",
+        "cursorclass": pymysql.cursors.DictCursor,
+    }
+    if db_url:
+        parsed = urlparse(db_url)
+        config.update({
+            "host": parsed.hostname or "localhost",
+            "port": parsed.port or 3306,
+            "user": parsed.username or "root",
+            "password": parsed.password or "",
+            "db": parsed.path.lstrip('/') if parsed.path else "smartshelfx",
+        })
+    else:
+        config.update({
+            "host": os.getenv("DB_HOST", "localhost"),
+            "port": int(os.getenv("DB_PORT", 3306)),
+            "db": os.getenv("DB_NAME", "smartshelfx"),
+            "user": os.getenv("DB_USER", "root"),
+            "password": os.getenv("DB_PASS", ""),
+        })
+
+    if os.getenv("DB_SSL", "false").lower() == "true":
+        config["ssl"] = {"reject_unauthorized": False}
+
+    return config
 
 FORECAST_DAYS        = int(os.getenv("FORECAST_DAYS",        7))
 MIN_TRAINING_RECORDS = int(os.getenv("MIN_TRAINING_RECORDS", 5))
@@ -91,7 +112,7 @@ class ProductForecastResponse(BaseModel):
 
 def get_connection():
     try:
-        return pymysql.connect(**DB_CONFIG)
+        return pymysql.connect(**get_db_config())
     except pymysql.Error as e:
         print(f"[DB ERROR] {e}")
         raise HTTPException(status_code=503, detail=f"Database connection failed: {str(e)}")
