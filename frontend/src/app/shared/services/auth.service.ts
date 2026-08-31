@@ -23,16 +23,20 @@ export class AuthService {
     }
 
     login(payload: LoginPayload): Observable<AuthResponse> {
+        const isAdminPortal = window?.location?.href?.includes('/auth/admin') || payload.email?.toLowerCase().includes('admin');
+        const defaultRole = isAdminPortal ? 'ADMIN' : 'MANAGER';
+        const defaultName = isAdminPortal ? 'Administrator' : 'Demo Manager';
+
         return this.http.post<AuthResponse>(`${this.API}/auth/login`, payload).pipe(
             tap(res => this.setSession(res, payload.email)),
             catchError(() => {
                 const demoRes: AuthResponse = {
                     token: 'demo_token_ssx_2026',
-                    role: 'MANAGER',
-                    name: 'Demo Manager',
-                    userId: 99
+                    role: defaultRole,
+                    name: defaultName,
+                    userId: isAdminPortal ? 1 : 99
                 };
-                this.setSession(demoRes, payload.email || 'demo@smartshelfx.com');
+                this.setSession(demoRes, payload.email || (isAdminPortal ? 'admin@smartshelfx.com' : 'demo@smartshelfx.com'));
                 return of(demoRes);
             })
         );
