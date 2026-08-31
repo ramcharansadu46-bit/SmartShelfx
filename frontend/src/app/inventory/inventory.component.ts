@@ -23,6 +23,8 @@ export class InventoryComponent implements OnInit {
     showForm = false;
     importing = false;
     importError = '';
+    importErrorTitle = '';
+    isColumnMismatch = false;
     editing: Product | null = null;
     searchTerm = '';
     filterCategory = '';
@@ -61,11 +63,8 @@ export class InventoryComponent implements OnInit {
         });
     }
     loadVendors() {
-        this.http.get<any>(environment.apiUrl + '/auth/users').subscribe({
-            next: res => {
-                const all = Array.isArray(res) ? res : (res.data || []);
-                this.vendors = all.filter((u: any) => u.role === 'VENDOR');
-            },
+        this.http.get<User[]>(`${environment.apiUrl}/auth/users`).subscribe({
+            next: users => { this.vendors = users.filter(u => u.role === 'VENDOR'); },
             error: () => { }
         });
     }
@@ -77,11 +76,11 @@ export class InventoryComponent implements OnInit {
     loadProducts() {
         this.loading = true;
         this.api.getProducts({
+            search: this.searchTerm || undefined,
+            category: this.filterCategory || undefined,
+            status: this.filterStatus || undefined,
             page: this.page,
-            limit: this.limit,
-            search: this.searchTerm,
-            category: this.filterCategory,
-            status: this.filterStatus
+            limit: this.limit
         }).subscribe({
             next: res => {
                 this.products = res.data;
@@ -90,13 +89,20 @@ export class InventoryComponent implements OnInit {
             },
             error: () => {
                 this.loading = false;
-                this.products = [];
-                this.total = 0;
+                this.notify.error('Failed to load products');
             }
         });
     }
-    openAdd() { this.editing = null; this.buildForm(); this.showForm = true; }
-    openEdit(p: Product) { this.editing = p; this.buildForm(p); this.showForm = true; }
+    openAdd() {
+        this.editing = null;
+        this.buildForm();
+        this.showForm = true;
+    }
+    openEdit(p: Product) {
+        this.editing = p;
+        this.buildForm(p);
+        this.showForm = true;
+    }
     closeForm() { this.showForm = false; this.editing = null; }
     saveProduct() {
         if (this.form.invalid) { this.form.markAllAsTouched(); return; }
@@ -135,12 +141,15 @@ export class InventoryComponent implements OnInit {
         }
         this.importing = true;
         this.importError = '';
+        this.importErrorTitle = '';
+        this.isColumnMismatch = false;
         this.api.importProductsSheet(file).subscribe({
             next: res => {
                 this.importing = false;
                 if (res.imported === 0) {
-                    this.importError = `No new products were imported. All ${res.skipped} row(s) already exist in the database (duplicate SKUs).`;
-                    this.notify.error('Import skipped — all products already exist');
+                    this.importErrorTitle = 'No Products Imported';
+                    this.importError = `All ${res.skipped || res.total || 0} product(s) in your file already exist in the database (duplicate SKUs).`;
+                    this.notify.error('Import skipped — products already exist');
                 } else {
                     this.importError = '';
                     this.notify.success(`Imported ${res.imported} product(s)${res.skipped ? '. Skipped ' + res.skipped + ' duplicate(s)' : ''}`);
@@ -153,9 +162,17 @@ export class InventoryComponent implements OnInit {
                 input.value = '';
                 const body = err.error;
                 if (body?.detected_columns?.length > 0) {
+                    this.importErrorTitle = 'Import Failed — Column Mismatch';
+                    this.isColumnMismatch = true;
                     this.importError = `Your file columns: [${body.detected_columns.join(', ')}]. ${body.hint || 'Could not map to name, sku, category.'}`;
+                } else if (err.status === 409) {
+                    this.importErrorTitle = 'Duplicate Products';
+                    this.isColumnMismatch = false;
+                    this.importError = body?.error || 'All products in your file already exist in the inventory.';
                 } else {
-                    this.importError = body?.error || body?.message || 'Import failed. Check file format.';
+                    this.importErrorTitle = 'Import Failed';
+                    this.isColumnMismatch = false;
+                    this.importError = body?.error || body?.message || 'Import failed. Please verify the backend connection and file format.';
                 }
                 this.notify.error(this.importError);
             }

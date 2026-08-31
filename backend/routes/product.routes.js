@@ -1,6 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const csv = require('csv-parser');
+const XLSX = require('xlsx');
 const fs = require('fs');
 const path = require('path');
 const { Op } = require('sequelize');
@@ -34,13 +35,13 @@ const upload = multer({
 });
 router.use(authenticate);
 const flat = (str) => String(str || '').toLowerCase().replace(/[\s_\-\.\/\\()]/g, '');
-const NAME_KEYS = ['name', 'productname', 'product', 'itemname', 'item', 'title', 'description', 'productdescription'];
-const SKU_KEYS = ['sku', 'code', 'itemcode', 'productcode', 'barcode', 'partno', 'partnum', 'partnumber', 'productid', 'id', 'ref', 'reference', 'skucode'];
-const CATEGORY_KEYS = ['category', 'cat', 'type', 'group', 'department', 'dept', 'class', 'classification', 'producttype', 'productcategory'];
-const STOCK_KEYS = ['currentstock', 'stock', 'qty', 'quantity', 'onhand', 'available', 'stockqty', 'stockquantity', 'inventoryqty', 'units', 'instock'];
-const REORDER_KEYS = ['reorderlevel', 'reorder', 'minstock', 'minimum', 'minqty', 'reorderpoint', 'safetystock', 'reorderthreshold', 'reorderqty'];
-const PRICE_KEYS = ['unitprice', 'price', 'cost', 'rate', 'unitcost', 'sellingprice', 'retailprice', 'mrp', 'amount', 'value'];
-const EXPIRY_KEYS = ['expirydate', 'expiry', 'expiration', 'bestbefore', 'expdate', 'expirationdate', 'usebydate', 'sellbydate'];
+const NAME_KEYS = ['name', 'productname', 'product', 'itemname', 'item', 'title', 'description', 'productdescription', 'producttitle'];
+const SKU_KEYS = ['sku', 'code', 'itemcode', 'productcode', 'barcode', 'partno', 'partnum', 'partnumber', 'productid', 'id', 'ref', 'reference', 'skucode', 'itemno'];
+const CATEGORY_KEYS = ['category', 'cat', 'type', 'group', 'department', 'dept', 'class', 'classification', 'producttype', 'productcategory', 'categoryname'];
+const STOCK_KEYS = ['currentstock', 'stock', 'qty', 'quantity', 'onhand', 'available', 'stockqty', 'stockquantity', 'inventoryqty', 'units', 'instock', 'count', 'inventory'];
+const REORDER_KEYS = ['reorderlevel', 'reorderlv', 'reorderlvl', 'reorder', 'minstock', 'minimum', 'minqty', 'reorderpoint', 'safetystock', 'reorderthreshold', 'reorderqty', 'min', 'minimumstock', 'threshold'];
+const PRICE_KEYS = ['unitprice', 'price', 'cost', 'rate', 'unitcost', 'sellingprice', 'retailprice', 'mrp', 'amount', 'value', 'priceperunit'];
+const EXPIRY_KEYS = ['expirydate', 'expiry', 'expiration', 'bestbefore', 'expdate', 'expirationdate', 'usebydate', 'sellbydate', 'exp', 'bbdate'];
 const findValue = (row, keyList) => {
     const rowKeys = Object.keys(row);
     for (const key of keyList) {
@@ -79,14 +80,17 @@ const parseRows = (rawRows) => {
         const reorderVal = findValue(row, REORDER_KEYS);
         const priceVal = findValue(row, PRICE_KEYS);
         const expiryVal = findValue(row, EXPIRY_KEYS);
+        const cleanStock = stockVal ? parseInt(String(stockVal).replace(/[^0-9\-]/g, ''), 10) : 0;
+        const cleanReorder = reorderVal ? parseInt(String(reorderVal).replace(/[^0-9\-]/g, ''), 10) : 10;
+        const cleanPrice = priceVal ? parseFloat(String(priceVal).replace(/[^0-9\.]/g, '')) : 0;
         results.push({
             name: name.trim(),
             sku: sku.trim(),
             category: category.trim(),
             vendor_id: null,
-            current_stock: stockVal ? Math.max(0, parseInt(stockVal) || 0) : 0,
-            reorder_level: reorderVal ? Math.max(1, parseInt(reorderVal) || 10) : 10,
-            unit_price: priceVal ? Math.max(0, parseFloat(priceVal) || 0) : 0,
+            current_stock: isNaN(cleanStock) ? 0 : Math.max(0, cleanStock),
+            reorder_level: isNaN(cleanReorder) || cleanReorder < 1 ? 10 : cleanReorder,
+            unit_price: isNaN(cleanPrice) ? 0 : Math.max(0, cleanPrice),
             expiry_date: expiryVal || null
         });
     }
@@ -101,9 +105,10 @@ const readCSV = (filePath, separator = ',') => new Promise((resolve, reject) => 
         .on('error', err => reject(err));
 });
 const readExcel = (filePath) => {
-    const XLSX = require('xlsx');
     const wb = XLSX.readFile(filePath, { cellDates: true });
-    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const sheetName = wb.SheetNames[0];
+    if (!sheetName) return [];
+    const sheet = wb.Sheets[sheetName];
     return XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
 };
 const parseFile = async (filePath, ext) => {

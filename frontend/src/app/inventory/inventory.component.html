@@ -41,9 +41,9 @@
     <div class="import-error-panel" *ngIf="importError">
         <div class="error-icon">⚠️</div>
         <div class="error-body">
-            <strong>Import Failed — Column Mismatch</strong>
+            <strong>{{ importErrorTitle || 'Import Notice' }}</strong>
             <p>{{ importError }}</p>
-            <p class="error-fix">
+            <p class="error-fix" *ngIf="isColumnMismatch">
                 👉 Rename your columns to match:
                 <code>name</code>, <code>sku</code>, <code>category</code>
                 — or click <strong>📄 Template</strong> and use that format.
