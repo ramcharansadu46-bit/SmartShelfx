@@ -234,6 +234,18 @@ router.put('/:id', requireRole('ADMIN', 'MANAGER'), async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+router.delete('/clear-all', requireRole('ADMIN'), async (req, res) => {
+    try {
+        await StockTransaction.destroy({ where: {} });
+        await ForecastResult.destroy({ where: {} });
+        await Alert.destroy({ where: {} });
+        await PurchaseOrder.destroy({ where: {} });
+        const deleted = await Product.destroy({ where: {} });
+        res.json({ success: true, deleted });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 router.delete('/:id', requireRole('ADMIN'), async (req, res) => {
     try {
         const product = await Product.findByPk(req.params.id);
@@ -339,18 +351,6 @@ router.post('/import-csv', requireRole('ADMIN', 'MANAGER'), upload.single('file'
     } catch (err) {
         fs.existsSync(filePath) && fs.unlinkSync(filePath);
         res.status(500).json({ error: 'Import failed: ' + err.message });
-    }
-});
-router.delete('/clear-all', requireRole('ADMIN'), async (req, res) => {
-    try {
-        await StockTransaction.destroy({ where: {} });
-        await ForecastResult.destroy({ where: {} });
-        await Alert.destroy({ where: {} });
-        await PurchaseOrder.destroy({ where: {} });
-        const deleted = await Product.destroy({ where: {} });
-        res.json({ success: true, deleted });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
     }
 });
 module.exports = router;
