@@ -50,6 +50,9 @@ def get_db_config():
     if os.getenv("DB_SSL", "false").lower() == "true":
         config["ssl"] = {"reject_unauthorized": False}
     return config
+import sys
+if sys.stdout.encoding and sys.stdout.encoding.lower() not in ('utf-8', 'utf8'):
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 FORECAST_DAYS        = int(os.getenv("FORECAST_DAYS",        7))
 MIN_TRAINING_RECORDS = int(os.getenv("MIN_TRAINING_RECORDS", 5))
 def to_int(v):
@@ -212,13 +215,14 @@ def health_check():
     try:
         conn   = get_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM products")
-        count  = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) AS cnt FROM products")
+        count  = cursor.fetchone()["cnt"]
         cursor.close()
         conn.close()
         db = f"connected ({count} products)"
     except Exception as e:
-        db = f"error: {e}"
+        import traceback; traceback.print_exc()
+        db = f"error: {type(e).__name__}: {e}"
     return {"status": "ok", "service": "SmartShelfX ML", "database": db}
 @app.post("/forecast", response_model=ForecastResponse)
 def run_forecast():
@@ -232,9 +236,9 @@ def run_forecast():
                 result = forecast_product(p)
                 save_forecast(result)
                 forecasts.append(ForecastItem(**result))
-                print(f"  ✓ {p['name']} → {result['risk_level']} ({result['predicted_qty']} units)")
+                print(f"  [OK] {p['name']} -> {result['risk_level']} ({result['predicted_qty']} units)")
             except Exception as e:
-                print(f"  ✗ Product {p['id']} ({p.get('name','?')}): {e}")
+                print(f"  [ERR] Product {p['id']} ({p.get('name','?')}): {e}")
                 traceback.print_exc()
                 errors.append({"product_id": p["id"], "error": str(e)})
         avg_conf = sum(f.confidence for f in forecasts) / len(forecasts) if forecasts else 0.0
@@ -343,5 +347,5 @@ def stock_velocity():
         raise HTTPException(status_code=500, detail=str(e))
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.getenv("ML_PORT", 8000))
+    port = int(os.getenv("ML_PORT", 8001))
     uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
