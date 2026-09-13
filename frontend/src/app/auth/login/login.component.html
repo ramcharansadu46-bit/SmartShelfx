@@ -57,6 +57,36 @@
                     <span *ngIf="loading" class="spinner">⟳</span>
                 </button>
             </form>
+
+            <div class="demo-section">
+                <div class="demo-header">
+                    <span class="demo-badge">⚡ ONE-CLICK DEMO ACCESS</span>
+                </div>
+                <div class="demo-grid">
+                    <button type="button" class="demo-btn admin-demo" (click)="quickLogin('admin@smartshelfx.com', 'Admin@123')">
+                        <span class="demo-role-icon">👑</span>
+                        <div class="demo-text">
+                            <strong>Admin</strong>
+                            <span>Full System</span>
+                        </div>
+                    </button>
+                    <button type="button" class="demo-btn manager-demo" (click)="quickLogin('manager@smartshelfx.com', 'Admin@123')">
+                        <span class="demo-role-icon">💼</span>
+                        <div class="demo-text">
+                            <strong>Manager</strong>
+                            <span>AI Forecast</span>
+                        </div>
+                    </button>
+                    <button type="button" class="demo-btn vendor-demo" (click)="quickLogin('vendor.dairy@smartshelfx.com', 'Admin@123')">
+                        <span class="demo-role-icon">🚚</span>
+                        <div class="demo-text">
+                            <strong>Vendor</strong>
+                            <span>Orders & Alerts</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
             <p class="footer-link">New to the platform? <a routerLink="/auth/register">Create an account</a></p>
             <div class="admin-link-row">
                 <span class="admin-divider">─────── or ───────</span>

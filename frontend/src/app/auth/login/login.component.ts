@@ -46,6 +46,10 @@ export class LoginComponent {
             }
         });
     }
+    quickLogin(email: string, pass: string): void {
+        this.form.patchValue({ email, password: pass });
+        this.submit();
+    }
     private redirectByRole(role: string): void {
         switch (role) {
             case 'ADMIN': this.router.navigate(['/dashboard']); break;

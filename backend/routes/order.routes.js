@@ -6,39 +6,41 @@ const router = express.Router();
 router.use(authenticate);
 router.get('/suggestions', async (req, res) => {
     try {
-        const [rows] = await sequelize.query(`
-      SELECT
-        f.id, f.product_id, f.forecast_date,
-        f.predicted_qty, f.confidence, f.risk_level,
-        p.name AS p_name, p.sku AS p_sku, p.category AS p_cat,
-        p.current_stock, p.reorder_level, p.unit_price, p.vendor_id,
-        u.id AS v_id, u.name AS v_name, u.email AS v_email
-      FROM forecast_results f
-      LEFT JOIN products p ON p.id = f.product_id
-      LEFT JOIN users   u ON u.id = p.vendor_id
-      WHERE f.risk_level IN ('HIGH','CRITICAL')
-      ORDER BY p.current_stock ASC, f.risk_level DESC
-      LIMIT 50
-    `);
-        const suggestions = (rows || []).map(r => ({
-            id: r.id,
-            product_id: Number(r.product_id),
-            forecast_date: r.forecast_date,
-            predicted_qty: Number(r.predicted_qty) || 0,
-            confidence: Number(r.confidence) || 0,
-            risk_level: r.risk_level || 'LOW',
-            Product: {
-                id: Number(r.product_id),
-                name: r.p_name || ('Product #' + r.product_id),
-                sku: r.p_sku || '',
-                category: r.p_cat || '',
-                current_stock: Number(r.current_stock) || 0,
-                reorder_level: Number(r.reorder_level) || 0,
-                unit_price: Number(r.unit_price) || 0,
-                vendor_id: r.vendor_id || null,
-                vendor: r.v_id ? { id: r.v_id, name: r.v_name, email: r.v_email } : null
-            }
-        }));
+        const { ForecastResult } = require('../models');
+        const forecasts = await ForecastResult.findAll({
+            where: {
+                risk_level: ['HIGH', 'CRITICAL']
+            },
+            include: [{
+                model: Product,
+                as: 'Product',
+                include: [{ model: User, as: 'vendor', attributes: ['id', 'name', 'email'] }]
+            }],
+            order: [['id', 'DESC']],
+            limit: 50
+        });
+        const suggestions = forecasts.map(f => {
+            const prod = f.Product || {};
+            return {
+                id: f.id,
+                product_id: Number(f.product_id),
+                forecast_date: f.forecast_date,
+                predicted_qty: Number(f.predicted_qty) || 0,
+                confidence: Number(f.confidence) || 0,
+                risk_level: f.risk_level || 'LOW',
+                Product: {
+                    id: Number(f.product_id),
+                    name: prod.name || ('Product #' + f.product_id),
+                    sku: prod.sku || '',
+                    category: prod.category || '',
+                    current_stock: Number(prod.current_stock) || 0,
+                    reorder_level: Number(prod.reorder_level) || 0,
+                    unit_price: Number(prod.unit_price) || 0,
+                    vendor_id: prod.vendor_id || null,
+                    vendor: prod.vendor ? { id: prod.vendor.id, name: prod.vendor.name, email: prod.vendor.email } : null
+                }
+            };
+        });
         res.json(suggestions);
     } catch (err) {
         console.error('[GET /orders/suggestions] error:', err.message);

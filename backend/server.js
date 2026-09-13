@@ -11,6 +11,7 @@ const orderRoutes = require('./routes/order.routes');
 const alertRoutes = require('./routes/alert.routes');
 const analyticsRoutes = require('./routes/analytics.routes');
 const { startPOScheduler } = require('./utils/poScheduler');
+const { autoSeed } = require('./utils/autoSeed');
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.use(cors({
@@ -60,9 +61,10 @@ const startDB = async () => {
     try {
         await sequelize.authenticate();
         console.log('✅ Database connected.');
-        await sequelize.sync({ alter: true });
+        await sequelize.sync();
         console.log('✅ Models synced with schema.');
         dbReady = true;
+        await autoSeed();
     } catch (err) {
         dbError = err.message;
         console.error('❌ Database connection failed:', err.message);

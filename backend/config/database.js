@@ -28,9 +28,9 @@ if (dbUrl) {
             collate: 'utf8mb4_unicode_ci'
         }
     });
-} else if (process.env.DB_HOST && process.env.DB_HOST !== 'localhost') {
+} else if (process.env.DB_HOST) {
     const dialectOptions = {};
-    if (process.env.DB_SSL === 'true' || (process.env.NODE_ENV === 'production' && process.env.DB_SSL !== 'false')) {
+    if (process.env.DB_SSL === 'true' || (process.env.NODE_ENV === 'production' && process.env.DB_SSL !== 'false' && process.env.DB_HOST !== 'localhost')) {
         dialectOptions.ssl = {
             require: true,
             rejectUnauthorized: false
