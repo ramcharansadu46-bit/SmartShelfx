@@ -5,6 +5,8 @@ const fs = require('fs');
 const dbUrl = process.env.MYSQL_URL || process.env.DATABASE_URL;
 let sequelize;
 
+const isProductionLocalhost = process.env.NODE_ENV === 'production' && (!process.env.DB_HOST || process.env.DB_HOST === 'localhost');
+
 if (dbUrl) {
     const dialectOptions = {};
     if (process.env.DB_SSL === 'true' || (process.env.NODE_ENV === 'production' && process.env.DB_SSL !== 'false')) {
@@ -28,7 +30,7 @@ if (dbUrl) {
             collate: 'utf8mb4_unicode_ci'
         }
     });
-} else if (process.env.DB_HOST) {
+} else if (process.env.DB_HOST && !isProductionLocalhost) {
     const dialectOptions = {};
     if (process.env.DB_SSL === 'true' || (process.env.NODE_ENV === 'production' && process.env.DB_SSL !== 'false' && process.env.DB_HOST !== 'localhost')) {
         dialectOptions.ssl = {
