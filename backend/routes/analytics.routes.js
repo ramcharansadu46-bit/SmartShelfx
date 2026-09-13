@@ -184,4 +184,43 @@ router.get('/stock-movement', async (req, res) => {
     }
 });
 
+// /velocity - returns daily sales velocity per product (used by ML microservice)
+router.get('/velocity', async (req, res) => {
+    try {
+        const { Op } = require('sequelize');
+        const since = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
+        const products = await Product.findAll({
+            attributes: ['id', 'name', 'sku', 'current_stock', 'reorder_level']
+        });
+        const result = [];
+        for (const prod of products) {
+            const txs = await StockTransaction.findAll({
+                where: {
+                    product_id: prod.id,
+                    type: 'OUT',
+                    timestamp: { [Op.gte]: since }
+                },
+                attributes: ['quantity', 'timestamp']
+            });
+            const totalOut = txs.reduce((sum, t) => sum + Number(t.quantity || 0), 0);
+            const daysActive = Math.max(1, txs.length > 0 ? 60 : 1);
+            result.push({
+                product_id: prod.id,
+                name: prod.name,
+                sku: prod.sku,
+                current_stock: prod.current_stock,
+                reorder_level: prod.reorder_level,
+                daily_velocity: Math.round((totalOut / daysActive) * 100) / 100,
+                total_out_60d: totalOut,
+                transaction_count: txs.length
+            });
+        }
+        res.json(result);
+    } catch (err) {
+        console.error('[GET /analytics/velocity] error:', err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 module.exports = router;
+
