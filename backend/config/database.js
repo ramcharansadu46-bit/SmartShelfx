@@ -57,33 +57,26 @@ function createMySQLConnection(urlOrConfig) {
     );
 }
 
+const isRender = Boolean(process.env.RENDER || process.env.RENDER_SERVICE_ID || process.env.VERCEL);
 const dbUrl = process.env.MYSQL_URL;
-const isProd = process.env.NODE_ENV === 'production';
 
-// Only use MySQL if an explicit MySQL URL or explicit non-localhost remote DB_HOST is set
 let sequelize;
+
 if (dbUrl && (dbUrl.startsWith('mysql') || dbUrl.startsWith('mysql2'))) {
     console.log('[DB] Connecting via MYSQL_URL...');
     sequelize = createMySQLConnection(dbUrl);
 } else if (process.env.DB_HOST && process.env.DB_HOST !== 'localhost' && process.env.DB_HOST !== '127.0.0.1') {
-    console.log('[DB] Connecting via DB_HOST:', process.env.DB_HOST);
+    console.log('[DB] Connecting via remote DB_HOST:', process.env.DB_HOST);
     sequelize = createMySQLConnection({});
-} else if (!isProd) {
-    // Local development: use MySQL on localhost if DB_HOST is set, else SQLite
-    if (process.env.DB_HOST === 'localhost' || !process.env.DB_HOST) {
-        try {
-            sequelize = createMySQLConnection({ host: 'localhost' });
-            console.log('[DB] Local dev: attempting MySQL on localhost...');
-        } catch (e) {
-            console.warn('[DB] MySQL not available, falling back to SQLite:', e.message);
-            sequelize = createSqliteConnection();
-        }
-    } else {
-        sequelize = createSqliteConnection();
-    }
+} else if (!isRender && (process.env.DB_HOST === 'localhost' || process.env.DB_HOST === '127.0.0.1') && process.env.DB_NAME) {
+    // Local development ONLY when DB_HOST=localhost is explicitly set in .env
+    console.log('[DB] Local development: using MySQL on localhost...');
+    sequelize = createMySQLConnection({ host: 'localhost' });
 } else {
-    // Production with no explicit DB config → use SQLite
+    // Cloud / Production / Render default / Fallback → SQLite
+    console.log('[DB] Using SQLite for zero-config persistence...');
     sequelize = createSqliteConnection();
 }
 
 module.exports = { sequelize, createSqliteConnection };
+
